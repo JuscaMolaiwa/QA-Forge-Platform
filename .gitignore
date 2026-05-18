@@ -1,2 +1,4 @@
 1-testforge-mobile/.env
 .env
+1-testforge-mobile/frontend/node_modules
+node_modules
