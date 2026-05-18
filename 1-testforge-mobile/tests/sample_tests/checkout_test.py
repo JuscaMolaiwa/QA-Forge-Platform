@@ -1,18 +1,18 @@
 """
-Sample Appium checkout flow test.
-Demonstrates multi-step UI interaction with assertions.
+Appium checkout flow test targeting the Sauce Labs sample app (saucedemo APK).
+Run via the Device Farm UI — environment variables are injected automatically.
 """
 import os
 import pytest
 from appium import webdriver
-from appium.options import AppiumOptions
+from appium.options.android.uiautomator2.base import UiAutomator2Options
 from appium.webdriver.common.appiumby import AppiumBy
 
 
 @pytest.fixture(scope="module")
 def driver():
-    opts = AppiumOptions()
-    opts.platform_name = os.environ.get("PLATFORM_NAME", "Android")
+    opts = UiAutomator2Options()
+    opts.platform_name = "Android"
     opts.set_capability("appium:udid", os.environ.get("DEVICE_UDID", ""))
     opts.set_capability("appium:app", os.environ.get("APP_PATH", ""))
     opts.set_capability("appium:automationName", "UiAutomator2")
@@ -21,37 +21,61 @@ def driver():
     host = os.environ.get("APPIUM_HOST", "localhost")
     port = os.environ.get("APPIUM_PORT", "4723")
     drv = webdriver.Remote(f"http://{host}:{port}", options=opts)
+
+    # Log in once for the entire module
+    drv.find_element(AppiumBy.ACCESSIBILITY_ID, "test-Username").send_keys("standard_user")
+    drv.find_element(AppiumBy.ACCESSIBILITY_ID, "test-Password").send_keys("secret_sauce")
+    drv.find_element(AppiumBy.ACCESSIBILITY_ID, "test-LOGIN").click()
+
     yield drv
     drv.quit()
 
 
 def test_product_list_loads(driver):
-    """Verify product listing page loads at least one item."""
-    items = driver.find_elements(AppiumBy.ACCESSIBILITY_ID, "product_item")
-    assert len(items) > 0, "Product list should not be empty"
+    """Verify the Products screen loads with at least one item."""
+    catalogue = driver.find_element(AppiumBy.ACCESSIBILITY_ID, "test-PRODUCTS")
+    assert catalogue.is_displayed(), "Products header should be visible"
+
+    items = driver.find_elements(AppiumBy.ACCESSIBILITY_ID, "test-Item title")
+    assert len(items) > 0, "Product list should contain at least one item"
 
 
 def test_add_to_cart(driver):
-    """Add first product to cart and verify cart count updates."""
-    first_item = driver.find_elements(AppiumBy.ACCESSIBILITY_ID, "product_item")[0]
-    first_item.find_element(AppiumBy.ACCESSIBILITY_ID, "add_to_cart_btn").click()
+    """Add the first product to the cart and verify the cart badge shows 1."""
+    add_buttons = driver.find_elements(AppiumBy.ACCESSIBILITY_ID, "test-ADD TO CART")
+    assert len(add_buttons) > 0, "At least one Add to Cart button should be present"
+    add_buttons[0].click()
 
-    cart_badge = driver.find_element(AppiumBy.ACCESSIBILITY_ID, "cart_badge")
-    assert cart_badge.text == "1", "Cart badge should show 1 item"
+    cart_badge = driver.find_element(AppiumBy.ACCESSIBILITY_ID, "test-Cart")
+    badge_text = cart_badge.find_element(AppiumBy.XPATH, ".//*[@content-desc='test-Cart item quantity']").text
+    assert badge_text == "1", f"Cart badge should read '1', got '{badge_text}'"
 
 
 def test_proceed_to_checkout(driver):
-    """Open cart and proceed to checkout screen."""
-    driver.find_element(AppiumBy.ACCESSIBILITY_ID, "cart_icon").click()
-    driver.find_element(AppiumBy.ACCESSIBILITY_ID, "checkout_btn").click()
+    """Open the cart and proceed to the checkout information screen."""
+    driver.find_element(AppiumBy.ACCESSIBILITY_ID, "test-Cart").click()
+    driver.find_element(AppiumBy.ACCESSIBILITY_ID, "test-CHECKOUT").click()
 
-    checkout_title = driver.find_element(AppiumBy.ACCESSIBILITY_ID, "checkout_title")
-    assert checkout_title.is_displayed(), "Checkout screen should be visible"
+    assert driver.find_element(
+        AppiumBy.ACCESSIBILITY_ID, "test-CHECKOUT: INFORMATION"
+    ).is_displayed(), "Checkout Information screen should be visible"
+
+    # Fill in required shipping fields
+    driver.find_element(AppiumBy.ACCESSIBILITY_ID, "test-First Name").send_keys("Test")
+    driver.find_element(AppiumBy.ACCESSIBILITY_ID, "test-Last Name").send_keys("User")
+    driver.find_element(AppiumBy.ACCESSIBILITY_ID, "test-Zip/Postal Code").send_keys("12345")
+    driver.find_element(AppiumBy.ACCESSIBILITY_ID, "test-CONTINUE").click()
 
 
 def test_order_summary_shows_correct_total(driver):
-    """Assert order summary contains a non-zero total."""
-    total_element = driver.find_element(AppiumBy.ACCESSIBILITY_ID, "order_total")
-    total_text = total_element.text  # e.g. "$19.99"
-    assert total_text.startswith("$"), "Total should be a currency value"
-    assert float(total_text.replace("$", "").replace(",", "")) > 0, "Total should be positive"
+    """Assert the order summary screen shows a positive currency total."""
+    assert driver.find_element(
+        AppiumBy.ACCESSIBILITY_ID, "test-CHECKOUT: OVERVIEW"
+    ).is_displayed(), "Checkout Overview screen should be visible"
+
+    total_element = driver.find_element(AppiumBy.XPATH, '//*[@content-desc="test-Price total"]')
+    total_text = total_element.text  # e.g. "Item total: $9.99"
+
+    # Extract the dollar amount from the label
+    amount_str = total_text.split("$")[-1].replace(",", "").strip()
+    assert float(amount_str) > 0, f"Order total should be positive, got: '{total_text}'"

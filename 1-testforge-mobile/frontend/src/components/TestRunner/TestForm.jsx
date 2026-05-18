@@ -5,18 +5,20 @@ const SAMPLE = `# Paste your Appium pytest test here
 # Environment variables are injected automatically:
 #   APPIUM_HOST, APPIUM_PORT, DEVICE_UDID, PLATFORM_NAME, APP_PATH
 
+import os
 import pytest
 from appium import webdriver
-from appium.options import AppiumOptions
-import os
+from appium.options.android.uiautomator2.base import UiAutomator2Options
 
 @pytest.fixture(scope="module")
 def driver():
-    opts = AppiumOptions()
-    opts.platform_name = os.environ["PLATFORM_NAME"]
-    opts.udid = os.environ["DEVICE_UDID"]
-    opts.app = os.environ.get("APP_PATH", "")
-    url = f"http://{os.environ['APPIUM_HOST']}:{os.environ['APPIUM_PORT']}"
+    opts = UiAutomator2Options()
+    opts.platform_name = os.environ.get("PLATFORM_NAME", "Android")
+    opts.set_capability("appium:udid", os.environ.get("DEVICE_UDID", ""))
+    opts.set_capability("appium:app", os.environ.get("APP_PATH", ""))
+    opts.set_capability("appium:automationName", "UiAutomator2")
+    opts.set_capability("appium:newCommandTimeout", 120)
+    url = f"http://{os.environ.get('APPIUM_HOST', 'localhost')}:{os.environ.get('APPIUM_PORT', '4723')}"
     drv = webdriver.Remote(url, options=opts)
     yield drv
     drv.quit()
