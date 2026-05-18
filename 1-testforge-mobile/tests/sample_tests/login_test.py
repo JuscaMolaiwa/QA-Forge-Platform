@@ -27,7 +27,6 @@ def driver():
 
 def test_login_screen_loads(driver):
     """Verify the login screen is displayed on launch."""
-    # Replace with your app's actual locators
     username_field = driver.find_element(AppiumBy.ACCESSIBILITY_ID, "username_input")
     assert username_field.is_displayed(), "Username field should be visible"
 
