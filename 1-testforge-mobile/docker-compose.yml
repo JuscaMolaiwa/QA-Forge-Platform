@@ -1,0 +1,48 @@
+version: "3.9"
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=${FLASK_ENV:-development}
+      - SECRET_KEY=${SECRET_KEY:-dev-secret}
+      - APPIUM_HOST=${APPIUM_HOST:-appium}
+      - APPIUM_BASE_PORT=${APPIUM_BASE_PORT:-4723}
+      - DATABASE_URL=${DATABASE_URL:-sqlite:///device_farm.db}
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:3000}
+    volumes:
+      - ./backend:/app
+      - /dev/bus/usb:/dev/bus/usb  # USB device passthrough for ADB
+    privileged: true
+    network_mode: host
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_URL=http://localhost:5000
+      - REACT_APP_WS_URL=ws://localhost:5000
+    volumes:
+      - ./frontend/src:/app/src
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  appium:
+    image: appium/appium:latest
+    ports:
+      - "4723:4723"
+    environment:
+      - APPIUM_ARGS=--relaxed-security
+    volumes:
+      - /dev/bus/usb:/dev/bus/usb
+    privileged: true
+    restart: unless-stopped

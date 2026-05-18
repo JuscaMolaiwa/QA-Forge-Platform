@@ -1,0 +1,106 @@
+:root {
+  --brand: #0f6e56;
+  --brand-light: #e1f5ee;
+  --brand-mid: #1d9e75;
+  --brand-soft: #9fe1cb;
+  --accent: #185fa5;
+  --accent-light: #e6f1fb;
+  --danger: #a32d2d;
+  --danger-light: #fcebeb;
+  --warning: #854f0b;
+  --warning-light: #faeeda;
+  --gray-50: #f8f9fa;
+  --gray-100: #f1f3f4;
+  --gray-200: #e8eaed;
+  --gray-400: #9aa0a6;
+  --gray-600: #5f6368;
+  --gray-900: #1a1a1a;
+  --mono: "JetBrains Mono", monospace;
+  --sans: "DM Sans", system-ui, sans-serif;
+  --radius: 10px;
+  --radius-sm: 6px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--sans);
+  font-size: 14px;
+  color: var(--gray-900);
+  background: var(--gray-100);
+  line-height: 1.6;
+}
+
+button {
+  font-family: var(--sans);
+  cursor: pointer;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 7px 14px;
+  transition: opacity 0.15s, background 0.15s;
+}
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-primary {
+  background: var(--brand);
+  color: #fff;
+}
+.btn-primary:hover:not(:disabled) { background: var(--brand-mid); }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--gray-600);
+  border: 1px solid var(--gray-200);
+}
+.btn-ghost:hover:not(:disabled) { background: var(--gray-100); }
+
+.btn-danger {
+  background: var(--danger-light);
+  color: var(--danger);
+}
+.btn-danger:hover:not(:disabled) { background: #f7c1c1; }
+
+input, select, textarea {
+  font-family: var(--sans);
+  font-size: 13px;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  outline: none;
+  width: 100%;
+  background: #fff;
+  color: var(--gray-900);
+  transition: border-color 0.15s;
+}
+input:focus, select:focus, textarea:focus { border-color: var(--brand-mid); }
+
+textarea { font-family: var(--mono); font-size: 12px; resize: vertical; }
+
+label {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--gray-600);
+  margin-bottom: 5px;
+  font-family: var(--mono);
+  letter-spacing: 0.03em;
+}
+
+.card {
+  background: #fff;
+  border-radius: var(--radius);
+  border: 1px solid var(--gray-200);
+  box-shadow: var(--shadow);
+}
+
+.error-msg {
+  background: var(--danger-light);
+  color: var(--danger);
+  border: 1px solid #f7c1c1;
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  font-size: 13px;
+}

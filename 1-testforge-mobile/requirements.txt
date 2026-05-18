@@ -1,0 +1,12 @@
+flask==3.0.3
+flask-socketio==5.3.6
+flask-cors==4.0.1
+flask-sqlalchemy==3.1.1
+sqlalchemy==2.0.31
+python-dotenv==1.0.1
+Appium-Python-Client==3.2.0
+selenium==4.21.0
+eventlet==0.36.1
+python-socketio==5.11.3
+marshmallow==3.21.3
+requests==2.32.3

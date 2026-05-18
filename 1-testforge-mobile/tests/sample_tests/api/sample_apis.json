@@ -1,0 +1,69 @@
+{
+  "submit_test": {
+    "method": "POST",
+    "url": "/api/tests/",
+    "body": {
+      "test_name": "Login smoke test",
+      "platform": "android",
+      "app_path": "/builds/myapp.apk",
+      "test_content": "# paste your pytest test script here"
+    },
+    "response_202": {
+      "session_id": "a1b2c3d4-...",
+      "status": "queued",
+      "test_name": "Login smoke test",
+      "queued_at": "2025-01-01T10:00:00"
+    }
+  },
+  "get_session": {
+    "method": "GET",
+    "url": "/api/tests/{session_id}",
+    "response_200": {
+      "session_id": "a1b2c3d4-...",
+      "status": "passed",
+      "passed_count": 3,
+      "failed_count": 0,
+      "total_count": 3,
+      "duration_seconds": 42.1,
+      "device_name": "Pixel 7",
+      "device_udid": "emulator-5554"
+    }
+  },
+  "list_devices": {
+    "method": "GET",
+    "url": "/api/devices/",
+    "response_200": [
+      {
+        "id": 1,
+        "udid": "emulator-5554",
+        "name": "Pixel 7",
+        "platform": "android",
+        "platform_version": "14",
+        "status": "online",
+        "is_cloud": false
+      }
+    ]
+  },
+  "sync_devices": {
+    "method": "POST",
+    "url": "/api/devices/sync",
+    "response_200": {
+      "synced": 2,
+      "devices": []
+    }
+  },
+  "reports_summary": {
+    "method": "GET",
+    "url": "/api/reports/summary",
+    "response_200": {
+      "total": 150,
+      "pass_rate": 87.3,
+      "passed": 131,
+      "failed": 14,
+      "error": 5,
+      "queued": 0,
+      "running": 0,
+      "cancelled": 0
+    }
+  }
+}
