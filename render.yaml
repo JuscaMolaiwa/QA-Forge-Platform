@@ -4,7 +4,7 @@ services:
   - type: web
     name: appium-device-farm-backend
     runtime: python
-    rootDir: backend
+    rootDir: 1-testforge-mobile/backend
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn --config gunicorn.conf.py "app:app"
     plan: free
@@ -34,8 +34,8 @@ services:
   - type: web
     name: appium-device-farm-frontend
     runtime: static
-    buildCommand: cd frontend && npm install && npm run build
-    staticPublishPath: frontend/build
+    buildCommand: cd 1-testforge-mobile/frontend && npm install && npm run build
+    staticPublishPath: 1-testforge-mobile/frontend/build
     headers:
       - path: /*
         name: Cache-Control
