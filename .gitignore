@@ -1,7 +1,60 @@
-1-testforge-mobile/.env
+# ── Environment ────────────────────────────────────────────────────────────────
 .env
-1-testforge-mobile/backend/.venv
-1-testforge-mobile/frontend/node_modules
-node_modules
+.env.*
+!.env.example
+
+# ── Python ─────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.venv/
+venv/
+env/
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+htmlcov/
+.coverage
+*.log
+
+# ── Database ───────────────────────────────────────────────────────────────────
+*.db
+*.sqlite
+*.sqlite3
+
+# ── Node / React ───────────────────────────────────────────────────────────────
 node_modules/
-1-testforge-mobile/frontend/node_modules
+frontend/node_modules/
+frontend/build/
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ── Appium / Test artifacts ────────────────────────────────────────────────────
+/tmp/appium_*.log
+allure-results/
+allure-report/
+screenshots/
+videos/
+test-results/
+
+# ── Docker ─────────────────────────────────────────────────────────────────────
+.docker/
+
+# ── OS ─────────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# ── IDE ─────────────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo

@@ -1,6 +1,40 @@
 version: "3.9"
 
 services:
+
+  # ── Android Emulator ────────────────────────────────────────────────────────
+  android:
+    image: budtmo/docker-android:emulator_13.0
+    privileged: true
+    ports:
+      - "6080:6080"   # noVNC — view emulator in browser at http://localhost:6080
+      - "5554:5554"   # ADB emulator port
+      - "5555:5555"   # ADB TCP port
+    environment:
+      - EMULATOR_DEVICE=Samsung Galaxy S10
+      - WEB_VNC=true
+      - APPIUM=false  # we run our own Appium
+    healthcheck:
+      test: ["CMD", "adb", "devices"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 120s
+    restart: unless-stopped
+
+  # ── Appium ──────────────────────────────────────────────────────────────────
+  appium:
+    image: appium/appium:latest
+    ports:
+      - "4723:4723"
+    environment:
+      - APPIUM_ARGS=--relaxed-security --address 0.0.0.0
+    depends_on:
+      android:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ── Backend ─────────────────────────────────────────────────────────────────
   backend:
     build:
       context: ./backend
@@ -10,17 +44,20 @@ services:
     environment:
       - FLASK_ENV=${FLASK_ENV:-development}
       - SECRET_KEY=${SECRET_KEY:-dev-secret}
-      - APPIUM_HOST=${APPIUM_HOST:-appium}
-      - APPIUM_BASE_PORT=${APPIUM_BASE_PORT:-4723}
+      - APPIUM_HOST=appium
+      - APPIUM_BASE_PORT=4723
       - DATABASE_URL=${DATABASE_URL:-sqlite:///device_farm.db}
       - FRONTEND_URL=${FRONTEND_URL:-http://localhost:3000}
+      - ADB_HOST=android
+      - ADB_PORT=5555
     volumes:
       - ./backend:/app
-      - /dev/bus/usb:/dev/bus/usb  # USB device passthrough for ADB
-    privileged: true
-    network_mode: host
+      - ./tests:/app/tests
+    depends_on:
+      - appium
     restart: unless-stopped
 
+  # ── Frontend ─────────────────────────────────────────────────────────────────
   frontend:
     build:
       context: ./frontend
@@ -34,15 +71,4 @@ services:
       - ./frontend/src:/app/src
     depends_on:
       - backend
-    restart: unless-stopped
-
-  appium:
-    image: appium/appium:latest
-    ports:
-      - "4723:4723"
-    environment:
-      - APPIUM_ARGS=--relaxed-security
-    volumes:
-      - /dev/bus/usb:/dev/bus/usb
-    privileged: true
     restart: unless-stopped

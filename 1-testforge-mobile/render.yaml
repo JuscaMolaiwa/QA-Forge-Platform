@@ -1,0 +1,63 @@
+services:
+
+  # ── Backend (Flask + SocketIO) ───────────────────────────────────────────────
+  - type: web
+    name: appium-device-farm-backend
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r ../requirements.txt
+    startCommand: gunicorn --config gunicorn.conf.py "app:app"
+    plan: free
+    healthCheckPath: /api/health
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        value: sqlite:////data/device_farm.db   # persistent disk path
+      - key: FRONTEND_URL
+        fromService:
+          name: appium-device-farm-frontend
+          type: web
+          property: host
+      - key: APPIUM_HOST
+        value: localhost
+      - key: APPIUM_BASE_PORT
+        value: "4723"
+      - key: MAX_QUEUE_SIZE
+        value: "50"
+      - key: SESSION_TIMEOUT_SECONDS
+        value: "300"
+    disk:
+      name: device-farm-db
+      mountPath: /data
+      sizeGB: 1
+
+  # ── Frontend (React static site) ─────────────────────────────────────────────
+  - type: web
+    name: appium-device-farm-frontend
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: build
+    plan: free
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: no-cache
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: REACT_APP_API_URL
+        fromService:
+          name: appium-device-farm-backend
+          type: web
+          property: host
+      - key: REACT_APP_WS_URL
+        fromService:
+          name: appium-device-farm-backend
+          type: web
+          property: host
