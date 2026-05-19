@@ -4,34 +4,43 @@ services:
 
   # ── Android Emulator ────────────────────────────────────────────────────────
   android:
+    platform: linux/amd64
     image: budtmo/docker-android:emulator_13.0
     privileged: true
     ports:
-      - "6080:6080"   # noVNC — view emulator in browser at http://localhost:6080
-      - "5554:5554"   # ADB emulator port
-      - "5555:5555"   # ADB TCP port
+      - "6080:6080"
+      - "5554:5554"
+      - "5555:5555"
     environment:
       - EMULATOR_DEVICE=Samsung Galaxy S10
       - WEB_VNC=true
-      - APPIUM=false  # we run our own Appium
+      - APPIUM=false
     healthcheck:
-      test: ["CMD", "adb", "devices"]
-      interval: 10s
-      timeout: 5s
-      retries: 20
-      start_period: 120s
+      test: ["CMD-SHELL", "adb devices | grep emulator"]
+      interval: 15s
+      timeout: 10s
+      retries: 40
+      start_period: 240s    # emulators take a while on first boot
     restart: unless-stopped
 
   # ── Appium ──────────────────────────────────────────────────────────────────
   appium:
+    platform: linux/amd64
     image: appium/appium:latest
     ports:
       - "4723:4723"
     environment:
       - APPIUM_ARGS=--relaxed-security --address 0.0.0.0
+      - ANDROID_ADB_SERVER_ADDRESS=android   # ← tell ADB where the emulator is
+      - ANDROID_ADB_SERVER_PORT=5037
     depends_on:
       android:
         condition: service_healthy
+    # Connect ADB to the emulator on startup
+    command: >
+      sh -c "adb connect android:5555 &&
+             adb wait-for-device &&
+             appium --relaxed-security --address 0.0.0.0 --port 4723"
     restart: unless-stopped
 
   # ── Backend ─────────────────────────────────────────────────────────────────

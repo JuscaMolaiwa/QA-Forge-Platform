@@ -18,7 +18,7 @@ services:
       - key: DATABASE_URL
         value: sqlite:////tmp/device_farm.db
       - key: FRONTEND_URL
-        value: https://appium-device-farm-frontend.onrender.com  # ← fromService block removed
+        value: https://appium-device-farm-frontend.onrender.com 
       - key: APPIUM_HOST
         value: localhost
       - key: APPIUM_BASE_PORT

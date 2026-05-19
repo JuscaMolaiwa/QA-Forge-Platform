@@ -10,7 +10,6 @@ from appium.webdriver.common.appiumby import AppiumBy
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-
 WAIT = 15
 ERROR_TEXT = "Username and password do not match any user in this service."
 

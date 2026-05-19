@@ -10,7 +10,7 @@ export function useWebSocket(onSessionUpdate) {
 
   useEffect(() => {
     //const socket = io(WS_URL, { transports: ["websocket"], reconnectionDelay: 2000 });
-    const socket = io(WS_URL, { transports: ["polling", "websocket"], reconnectionDelay: 2000 });
+    const socket = io(WS_URL, { transports: ["websocket"], reconnectionDelay: 2000 });
     socketRef.current = socket;
 
     socket.on("session_update", (data) => cbRef.current(data));
