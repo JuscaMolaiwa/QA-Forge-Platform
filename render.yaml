@@ -18,11 +18,7 @@ services:
       - key: DATABASE_URL
         value: sqlite:////tmp/device_farm.db
       - key: FRONTEND_URL
-        value: https://appium-device-farm-frontend.onrender.com
-        fromService:
-          name: appium-device-farm-frontend
-          type: web
-          property: host
+        value: https://appium-device-farm-frontend.onrender.com  # ← fromService block removed
       - key: APPIUM_HOST
         value: localhost
       - key: APPIUM_BASE_PORT
@@ -49,13 +45,5 @@ services:
     envVars:
       - key: REACT_APP_API_URL
         value: https://appium-device-farm-backend.onrender.com
-        fromService:
-          name: appium-device-farm-backend
-          type: web
-          property: host
       - key: REACT_APP_WS_URL
-        value: wss://appium-device-farm-backend.onrender.com
-        fromService:
-          name: appium-device-farm-backend
-          type: web
-          property: host
+        value: https://appium-device-farm-backend.onrender.com
