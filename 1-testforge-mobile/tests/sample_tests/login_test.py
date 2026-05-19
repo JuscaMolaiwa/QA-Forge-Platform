@@ -29,7 +29,14 @@ def driver():
 
     host = os.environ.get("APPIUM_HOST", "localhost")
     port = os.environ.get("APPIUM_PORT", "4723")
-    drv = webdriver.Remote(f"http://{host}:{port}", options=opts)
+
+    if host.endswith(".ngrok-free.app") or host.endswith(".ngrok.io"):
+        appium_url = f"https://{host}"
+    else:
+        appium_url = f"http://{host}:{port}"
+
+    drv = webdriver.Remote(appium_url, options=opts)
+
     yield drv
     drv.quit()
 
