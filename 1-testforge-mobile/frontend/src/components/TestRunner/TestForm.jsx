@@ -1,42 +1,56 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { submitTest } from "../../api/client";
 
-const SAMPLE = `# Paste your Appium pytest test here
-# Environment variables are injected automatically:
-#   APPIUM_HOST, APPIUM_PORT, DEVICE_UDID, PLATFORM_NAME, APP_PATH
-
+const BLANK = {
+  test_name: "",
+  test_content: `import pytest
 import os
-import pytest
 from appium import webdriver
-from appium.options.android.uiautomator2.base import UiAutomator2Options
+from appium.options import UiAutomator2Options as AppiumOptions
 
 @pytest.fixture(scope="module")
 def driver():
-    opts = UiAutomator2Options()
-    opts.platform_name = os.environ.get("PLATFORM_NAME", "Android")
-    opts.set_capability("appium:udid", os.environ.get("DEVICE_UDID", ""))
+    opts = AppiumOptions()
+    opts.platform_name = os.environ["PLATFORM_NAME"]
+    opts.set_capability("appium:udid", os.environ["DEVICE_UDID"])
     opts.set_capability("appium:app", os.environ.get("APP_PATH", ""))
     opts.set_capability("appium:automationName", "UiAutomator2")
-    opts.set_capability("appium:newCommandTimeout", 120)
-    url = f"http://{os.environ.get('APPIUM_HOST', 'localhost')}:{os.environ.get('APPIUM_PORT', '4723')}"
-    drv = webdriver.Remote(url, options=opts)
+    drv = webdriver.Remote(
+        f"http://{os.environ['APPIUM_HOST']}:{os.environ['APPIUM_PORT']}",
+        options=opts,
+    )
     yield drv
     drv.quit()
 
 def test_app_launches(driver):
     assert driver.current_activity is not None
-`;
+`,
+  app_path: "",
+  platform: "android",
+};
 
-export default function TestForm({ onSubmitted }) {
-  const [form, setForm] = useState({
-    test_name: "",
-    test_content: SAMPLE,
-    app_path: "",
-    platform: "android",
-  });
+export default function TestForm({ onSubmitted, prefill }) {
+  const [form, setForm] = useState(BLANK);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(null);
+  const [fromLibrary, setFromLibrary] = useState(null);
+
+  useEffect(() => {
+  if (!prefill) return;
+  const name = prefill.name || "";
+  const content = prefill.content || "";
+  const platform = prefill.platform || "android";
+  setFromLibrary(name);
+  setForm({
+    test_name: name,
+    test_content: content,
+    app_path: "",
+    platform,
+  });
+  setSuccess(null);
+  setError("");
+}, [prefill]);
 
   const handleSubmit = async () => {
     setError("");
@@ -53,15 +67,38 @@ export default function TestForm({ onSubmitted }) {
     }
   };
 
+  const handleReset = () => {
+    setForm(BLANK);
+    setFromLibrary(null);
+    setSuccess(null);
+    setError("");
+  };
+
   return (
     <div>
-      <div style={{ fontWeight: 600, fontSize: 16, marginBottom: "1.25rem" }}>Submit Test</div>
+      <div style={{ display: "flex", alignItems: "center", marginBottom: "1.25rem", gap: 8 }}>
+        <span style={{ fontWeight: 600, fontSize: 16, flex: 1 }}>Run Test</span>
+        {fromLibrary && (
+          <span style={{
+            fontSize: 11, fontFamily: "var(--mono)",
+            background: "var(--brand-light)", color: "var(--brand)",
+            padding: "3px 8px", borderRadius: 99,
+            border: "1px solid var(--brand-soft)",
+          }}>
+            📂 {fromLibrary}
+          </span>
+        )}
+      </div>
 
       {error && <div className="error-msg" style={{ marginBottom: 12 }}>{error}</div>}
 
       {success && (
-        <div style={{ background: "var(--brand-light)", color: "var(--brand)", border: "1px solid var(--brand-soft)", borderRadius: 6, padding: "10px 14px", fontSize: 13, marginBottom: 12 }}>
-          ✓ Queued — session ID: <code style={{ fontFamily: "var(--mono)" }}>{success.session_id}</code>
+        <div style={{
+          background: "var(--brand-light)", color: "var(--brand)",
+          border: "1px solid var(--brand-soft)", borderRadius: 6,
+          padding: "10px 14px", fontSize: 13, marginBottom: 12,
+        }}>
+          ✓ Queued — <code style={{ fontFamily: "var(--mono)" }}>{success.session_id}</code>
         </div>
       )}
 
@@ -96,20 +133,15 @@ export default function TestForm({ onSubmitted }) {
         <div>
           <label>Test Script *</label>
           <textarea
-            rows={18}
+            rows={16}
             value={form.test_content}
             onChange={(e) => setForm((f) => ({ ...f, test_content: e.target.value }))}
             spellCheck={false}
           />
         </div>
 
-        <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
-          <button
-            className="btn-ghost"
-            onClick={() => setForm((f) => ({ ...f, test_name: "", test_content: SAMPLE, app_path: "" }))}
-          >
-            Reset
-          </button>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <button className="btn-ghost" onClick={handleReset}>Reset</button>
           <button
             className="btn-primary"
             onClick={handleSubmit}

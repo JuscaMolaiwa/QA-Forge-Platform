@@ -34,3 +34,22 @@ export const getQueueStatus = () => request("/api/tests/queue/status");
 export const getSummary = () => request("/api/reports/summary");
 export const getHistory = (limit = 30) => request(`/api/reports/history?limit=${limit}`);
 export const getTrends = (days = 7) => request(`/api/reports/trends?days=${days}`);
+
+// Library
+export const getLibrary = (params = {}) => {
+  const qs = new URLSearchParams(params).toString();
+  return request(`/api/library/${qs ? "?" + qs : ""}`);
+};
+export const getLibraryScript = (id) => request(`/api/library/${id}`);
+export const createLibraryScript = (payload) =>
+  request("/api/library/", { method: "POST", body: JSON.stringify(payload) });
+export const updateLibraryScript = (id, payload) =>
+  request(`/api/library/${id}`, { method: "PUT", body: JSON.stringify(payload) });
+export const deleteLibraryScript = (id) =>
+  request(`/api/library/${id}`, { method: "DELETE" });
+export const uploadLibraryScript = (file) => {
+  const fd = new FormData();
+  fd.append("file", file);
+  return fetch(`${BASE}/api/library/upload`, { method: "POST", body: fd })
+    .then((r) => r.json().then((d) => { if (!r.ok) throw new Error(d.error || `HTTP ${r.status}`); return d; }));
+};

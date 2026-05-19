@@ -5,6 +5,7 @@ import DeviceGrid from "./components/Dashboard/DeviceGrid";
 import TestForm from "./components/TestRunner/TestForm";
 import TestProgress from "./components/TestRunner/TestProgress";
 import ResultsViewer from "./components/TestRunner/ResultsViewer";
+import TestLibrary from "./components/TestRunner/TestLibrary";
 import ReportChart from "./components/Reports/ReportChart";
 import SessionHistory from "./components/Reports/SessionHistory";
 import { useDevices } from "./hooks/useDevices";
@@ -16,6 +17,7 @@ export default function App() {
   const [sessions, setSessions] = useState([]);
   const [queueDepth, setQueueDepth] = useState(0);
   const [summary, setSummary] = useState(null);
+  const [prefill, setPrefill] = useState(null);
 
   const { devices, loading, error, reload, syncAdb } = useDevices();
 
@@ -83,20 +85,39 @@ export default function App() {
         )}
 
         {activeTab === "Test Runner" && (
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+            {/* Library browser — full width */}
             <div className="card" style={{ padding: "1.5rem" }}>
-              <TestForm onSubmitted={(s) => setSessions((prev) => [s, ...prev])} />
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-              <div className="card" style={{ padding: "1.25rem" }}>
-                <div style={{ fontWeight: 600, marginBottom: 12 }}>
-                  Active ({sessions.filter((s) => ["queued", "running"].includes(s.status)).length})
-                </div>
-                <TestProgress sessions={sessions} onCancel={handleCancel} />
+              <div style={{ fontWeight: 600, fontSize: 15, marginBottom: "1rem" }}>
+                📂 Test Library
               </div>
-              <div className="card" style={{ padding: "1.25rem" }}>
-                <div style={{ fontWeight: 600, marginBottom: 12 }}>Results</div>
-                <ResultsViewer sessions={sessions} />
+              <TestLibrary
+                onSelect={(script) => {
+                  setPrefill({ ...script, _ts: Date.now() }); // force useEffect re-run
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+              />
+            </div>
+
+            {/* Runner + active sessions */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem" }}>
+              <div className="card" style={{ padding: "1.5rem" }}>
+                <TestForm
+                  prefill={prefill}
+                  onSubmitted={(s) => setSessions((prev) => [s, ...prev])}
+                />
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                <div className="card" style={{ padding: "1.25rem" }}>
+                  <div style={{ fontWeight: 600, marginBottom: 12 }}>
+                    Active ({sessions.filter((s) => ["queued", "running"].includes(s.status)).length})
+                  </div>
+                  <TestProgress sessions={sessions} onCancel={handleCancel} />
+                </div>
+                <div className="card" style={{ padding: "1.25rem" }}>
+                  <div style={{ fontWeight: 600, marginBottom: 12 }}>Results</div>
+                  <ResultsViewer sessions={sessions} />
+                </div>
               </div>
             </div>
           </div>
