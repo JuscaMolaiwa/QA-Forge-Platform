@@ -15,7 +15,7 @@ services:
       - key: SECRET_KEY
         generateValue: true
       - key: DATABASE_URL
-        value: sqlite:////data/device_farm.db   # persistent disk path
+        value: sqlite:////tmp/device_farm.db
       - key: FRONTEND_URL
         fromService:
           name: appium-device-farm-frontend
@@ -29,10 +29,6 @@ services:
         value: "50"
       - key: SESSION_TIMEOUT_SECONDS
         value: "300"
-    disk:
-      name: device-farm-db
-      mountPath: /data
-      sizeGB: 1
 
   # ── Frontend (React static site) ─────────────────────────────────────────────
   - type: web
