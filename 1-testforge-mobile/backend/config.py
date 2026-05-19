@@ -23,4 +23,9 @@ class Config:
     ADB_CONNECT_TIMEOUT = int(os.getenv("ADB_CONNECT_TIMEOUT", 10))
 
     FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
-    CORS_ORIGINS = [FRONTEND_URL, "http://localhost:3000", "http://127.0.0.1:3000"]
+    CORS_ORIGINS = [
+        FRONTEND_URL,
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    ]
+    CORS_ORIGINS_REGEX = r"https://.*\.onrender\.com"
