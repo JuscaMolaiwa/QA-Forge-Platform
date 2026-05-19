@@ -26,15 +26,25 @@ export default function App() {
   }, [reload]);
 
   // WebSocket live updates
+  // const handleSessionUpdate = useCallback((updated) => {
+  //   setSessions((prev) => {
+  //     const idx = prev.findIndex((s) => s.session_id === updated.session_id);
+  //     if (idx === -1) return [updated, ...prev];
+  //     const next = [...prev];
+  //     next[idx] = updated;
+  //     return next;
+  //   });
+  // }, []);
   const handleSessionUpdate = useCallback((updated) => {
-    setSessions((prev) => {
-      const idx = prev.findIndex((s) => s.session_id === updated.session_id);
-      if (idx === -1) return [updated, ...prev];
-      const next = [...prev];
-      next[idx] = updated;
-      return next;
-    });
-  }, []);
+  setSessions((prev) => {
+    const list = Array.isArray(prev) ? prev : [];
+    const idx = list.findIndex((s) => s.session_id === updated.session_id);
+    if (idx === -1) return [updated, ...list];
+    const next = [...list];
+    next[idx] = updated;
+    return next;
+  });
+}, []);
 
   useWebSocket(handleSessionUpdate);
 
@@ -47,7 +57,8 @@ export default function App() {
           getQueueStatus(),
           getSummary(),
         ]);
-        setSessions(s);
+        //setSessions(s);
+        setSessions(Array.isArray(s) ? s : (s?.sessions ?? s?.tests ?? []));
         setQueueDepth(q.depth);
         setSummary(sum);
       } catch (_) {}
@@ -110,7 +121,8 @@ export default function App() {
               <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
                 <div className="card" style={{ padding: "1.25rem" }}>
                   <div style={{ fontWeight: 600, marginBottom: 12 }}>
-                    Active ({sessions.filter((s) => ["queued", "running"].includes(s.status)).length})
+                    {/*Active ({sessions.filter((s) => ["queued", "running"].includes(s.status)).length})*/}
+                    Active ({(Array.isArray(sessions) ? sessions : []).filter((s) => ["queued", "running"].includes(s.status)).length})
                   </div>
                   <TestProgress sessions={sessions} onCancel={handleCancel} />
                 </div>
