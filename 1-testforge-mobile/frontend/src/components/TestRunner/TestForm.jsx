@@ -37,20 +37,20 @@ export default function TestForm({ onSubmitted, prefill }) {
   const [fromLibrary, setFromLibrary] = useState(null);
 
   useEffect(() => {
-  if (!prefill) return;
-  const name = prefill.name || "";
-  const content = prefill.content || "";
-  const platform = prefill.platform || "android";
-  setFromLibrary(name);
-  setForm({
-    test_name: name,
-    test_content: content,
-    app_path: "",
-    platform,
-  });
-  setSuccess(null);
-  setError("");
-}, [prefill]);
+    if (!prefill) return;
+    const name = prefill.name || "";
+    const content = prefill.content || "";
+    const platform = prefill.platform || "android";
+    setFromLibrary(name);
+    setForm({
+      test_name: name,
+      test_content: content,
+      app_path: "",
+      platform,
+    });
+    setSuccess(null);
+    setError("");
+  }, [prefill]);
 
   const handleSubmit = async () => {
     setError("");
@@ -76,17 +76,32 @@ export default function TestForm({ onSubmitted, prefill }) {
 
   return (
     <div>
-      <div style={{ display: "flex", alignItems: "center", marginBottom: "1.25rem", gap: 8 }}>
-        <span style={{ fontWeight: 600, fontSize: 16, flex: 1 }}>Run Test</span>
+      <div style={{ marginBottom: "1.25rem" }}>
+        <span style={{ fontWeight: 600, fontSize: 16 }}>Run Test</span>
+
         {fromLibrary && (
-          <span style={{
-            fontSize: 11, fontFamily: "var(--mono)",
-            background: "var(--brand-light)", color: "var(--brand)",
-            padding: "3px 8px", borderRadius: 99,
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            background: "var(--brand-light)",
             border: "1px solid var(--brand-soft)",
+            borderRadius: 8,
+            padding: "10px 14px",
+            marginBottom: 4,
+            fontSize: 13,
           }}>
-            📂 {fromLibrary}
-          </span>
+            <span style={{ flex: 1, color: "var(--brand)", fontWeight: 500 }}>
+              📂 <strong>{fromLibrary}</strong> loaded — review the script below and click <strong>▶ Run Test</strong> to execute
+            </span>
+            <button
+              className="btn-ghost"
+              style={{ fontSize: 11, padding: "2px 8px", flexShrink: 0 }}
+              onClick={() => setFromLibrary(null)}
+            >
+              ✕
+            </button>
+          </div>
         )}
       </div>
 

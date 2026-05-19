@@ -10,7 +10,7 @@ import {
 
 const PLATFORM_COLORS = {
   android: { bg: "#e6f1fb", color: "#185fa5" },
-  ios:     { bg: "#f3eefb", color: "#6b34ac" },
+  ios: { bg: "#f3eefb", color: "#6b34ac" },
 };
 
 export default function TestLibrary({ onSelect }) {
@@ -132,13 +132,13 @@ export default function TestLibrary({ onSelect }) {
                 isSelected={selected?.id === s.id}
                 onClick={() => selected?.id === s.id ? setSelected(null) : loadFull(s.id)}
                 onRun={async () => {
-  try {
-    const full = await getLibraryScript(s.id);
-    onSelect(full);
-  } catch (err) {
-    setError(err.message);
-  }
-}}
+                  try {
+                    const full = await getLibraryScript(s.id);
+                    onSelect(full);
+                  } catch (err) {
+                    setError(err.message);
+                  }
+                }}
                 onEdit={() => { loadFull(s.id).then(() => setEditing(s)); setShowNew(false); }}
                 onDelete={() => handleDelete(s.id, s.name)}
               />
@@ -216,7 +216,8 @@ function ScriptRow({ script, isSelected, onClick, onRun, onEdit, onDelete }) {
         </div>
       )}
       <div style={{ display: "flex", gap: 5, justifyContent: "flex-end" }} onClick={(e) => e.stopPropagation()}>
-        <button className="btn-primary" style={{ fontSize: 11, padding: "3px 10px" }} onClick={onRun}>▶ Run</button>
+        {/* <button className="btn-primary" style={{ fontSize: 11, padding: "3px 10px" }} onClick={onRun}>▶ Run</button> */}
+        <button className="btn-ghost" style={{ fontSize: 11, padding: "3px 10px" }} onClick={onRun}>↓ Load</button>
         <button className="btn-ghost" style={{ fontSize: 11, padding: "3px 8px" }} onClick={onEdit}>Edit</button>
         <button className="btn-danger" style={{ fontSize: 11, padding: "3px 8px" }} onClick={onDelete}>✕</button>
       </div>
@@ -256,7 +257,8 @@ function ScriptPreview({ script, onRun, onEdit, onClose }) {
       </pre>
       <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
         <button className="btn-ghost" onClick={onEdit}>Edit</button>
-        <button className="btn-primary" onClick={onRun}>▶ Run This Test</button>
+        {/* <button className="btn-primary" onClick={onRun}>▶ Run This Test</button> */}
+        <button className="btn-primary" onClick={onRun}>↓ Load into Runner</button>
       </div>
     </div>
   );

@@ -104,3 +104,21 @@ label {
   padding: 10px 14px;
   font-size: 13px;
 }
+
+.test-runner-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.test-runner-col {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+@media (max-width: 700px) {
+  .test-runner-grid {
+    grid-template-columns: 1fr;
+  }
+}
