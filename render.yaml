@@ -54,7 +54,7 @@ services:
           type: web
           property: host
       - key: REACT_APP_WS_URL
-        value: https://appium-device-farm-backend.onrender.com
+        value: wss://appium-device-farm-backend.onrender.com
         fromService:
           name: appium-device-farm-backend
           type: web
