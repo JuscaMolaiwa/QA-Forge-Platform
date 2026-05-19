@@ -6,6 +6,7 @@ export function useDevices() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  
   const load = useCallback(async () => {
   try {
     setError(null);
