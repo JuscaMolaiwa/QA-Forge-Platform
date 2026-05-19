@@ -5,6 +5,7 @@ services:
     name: appium-device-farm-backend
     runtime: python
     rootDir: 1-testforge-mobile/backend
+    pythonVersion: "3.11"
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn --config gunicorn.conf.py "app:app"
     plan: free

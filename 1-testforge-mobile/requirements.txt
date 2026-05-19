@@ -6,8 +6,8 @@ sqlalchemy==2.0.31
 python-dotenv==1.0.1
 Appium-Python-Client==3.2.0
 selenium==4.21.0
-gevent==24.2.1
-gevent-websocket==0.10.1
 python-socketio==5.11.3
 marshmallow==3.21.3
 requests==2.32.3
+gunicorn==22.0.0
+simple-websocket==1.1.0
