@@ -8,6 +8,13 @@ export default function DeviceGrid({ devices, loading, error, onSync, onDeleted 
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState("");
 
+  // Normalise: API may return { devices: [] }, null, or a bare array
+  const safeDevices = Array.isArray(devices)
+    ? devices
+    : Array.isArray(devices?.devices)
+      ? devices.devices
+      : [];
+
   const handleSubmit = async () => {
     setFormError("");
     setSubmitting(true);
@@ -24,9 +31,9 @@ export default function DeviceGrid({ devices, loading, error, onSync, onDeleted 
   };
 
   const counts = {
-    online: devices.filter((d) => d.status === "online").length,
-    busy: devices.filter((d) => d.status === "busy").length,
-    offline: devices.filter((d) => d.status === "offline").length,
+    online:  safeDevices.filter((d) => d.status === "online").length,
+    busy:    safeDevices.filter((d) => d.status === "busy").length,
+    offline: safeDevices.filter((d) => d.status === "offline").length,
   };
 
   return (
@@ -34,10 +41,10 @@ export default function DeviceGrid({ devices, loading, error, onSync, onDeleted 
       {/* Stats row */}
       <div style={{ display: "flex", gap: 10, marginBottom: "1.5rem", flexWrap: "wrap" }}>
         {[
-          { label: "Online", value: counts.online, color: "var(--brand)" },
-          { label: "Busy", value: counts.busy, color: "#854f0b" },
-          { label: "Offline", value: counts.offline, color: "var(--gray-400)" },
-          { label: "Total", value: devices.length, color: "var(--accent)" },
+          { label: "Online",  value: counts.online,        color: "var(--brand)" },
+          { label: "Busy",    value: counts.busy,          color: "#854f0b" },
+          { label: "Offline", value: counts.offline,       color: "var(--gray-400)" },
+          { label: "Total",   value: safeDevices.length,   color: "var(--accent)" },
         ].map(({ label, value, color }) => (
           <div key={label} className="card" style={{ flex: 1, minWidth: 100, padding: "14px 18px" }}>
             <div style={{ fontSize: 11, fontFamily: "var(--mono)", color: "var(--gray-400)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>{label}</div>
@@ -49,7 +56,7 @@ export default function DeviceGrid({ devices, loading, error, onSync, onDeleted 
       {/* Toolbar */}
       <div style={{ display: "flex", gap: 8, marginBottom: "1rem", alignItems: "center" }}>
         <span style={{ fontSize: 13, fontWeight: 600, flex: 1, color: "var(--gray-900)" }}>
-          Devices ({devices.length})
+          Devices ({safeDevices.length})
         </span>
         <button className="btn-ghost" onClick={onSync}>↻ Sync ADB</button>
         <button className="btn-primary" onClick={() => setShowForm((v) => !v)}>
@@ -64,10 +71,10 @@ export default function DeviceGrid({ devices, loading, error, onSync, onDeleted 
           {formError && <div className="error-msg" style={{ marginBottom: 10 }}>{formError}</div>}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
             {[
-              { key: "udid", label: "UDID *" },
-              { key: "name", label: "Name *" },
+              { key: "udid",             label: "UDID *" },
+              { key: "name",             label: "Name *" },
               { key: "platform_version", label: "OS Version" },
-              { key: "model", label: "Model" },
+              { key: "model",            label: "Model" },
             ].map(({ key, label }) => (
               <div key={key}>
                 <label>{label}</label>
@@ -98,14 +105,14 @@ export default function DeviceGrid({ devices, loading, error, onSync, onDeleted 
 
       {loading ? (
         <div style={{ textAlign: "center", color: "var(--gray-400)", padding: "3rem" }}>Loading devices…</div>
-      ) : devices.length === 0 ? (
+      ) : safeDevices.length === 0 ? (
         <div className="card" style={{ padding: "3rem", textAlign: "center", color: "var(--gray-400)" }}>
           <div style={{ fontSize: 32, marginBottom: 8 }}>📱</div>
           <div>No devices found. Connect a device via USB or click Sync ADB.</div>
         </div>
       ) : (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 12 }}>
-          {devices.map((d) => (
+          {safeDevices.map((d) => (
             <DeviceCard key={d.id} device={d} onDeleted={onDeleted} />
           ))}
         </div>

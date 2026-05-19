@@ -7,16 +7,16 @@ export function useDevices() {
   const [error, setError] = useState(null);
 
   const load = useCallback(async () => {
-    try {
-      setError(null);
-      const data = await getDevices();
-      setDevices(data);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  try {
+    setError(null);
+    const data = await getDevices();
+    setDevices(Array.isArray(data) ? data : (data?.devices ?? [])); 
+  } catch (err) {
+    setError(err.message);
+  } finally {
+    setLoading(false);
+  }
+}, []);
 
   const syncAdb = useCallback(async () => {
     try {
