@@ -39,6 +39,12 @@ def driver():
     opts.new_command_timeout = 180
     opts.auto_grant_permissions = True
 
+    # Docker/emulator timeout fixes
+    opts.uiautomator2_server_launch_timeout = 60000
+    opts.uiautomator2_server_install_timeout = 60000
+    opts.adb_exec_timeout = 60000
+    opts.android_device_ready_timeout = 60000
+
     # Appium server selection
     host = os.getenv("APPIUM_HOST", "localhost")
     port = os.getenv("APPIUM_PORT", "4723")
