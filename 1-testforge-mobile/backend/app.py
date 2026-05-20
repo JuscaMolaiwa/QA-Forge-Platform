@@ -25,16 +25,10 @@ def create_app(config: Config = None) -> Flask:
     app.register_blueprint(tests_bp)
     app.register_blueprint(reports_bp)
     app.register_blueprint(library_bp)
-    
+
     @app.get("/api/health")
     def health():
-        import os
-        return {
-            "status": "ok",
-            "queue_depth": app.queue_manager.depth(),
-            "APPIUM_HOST": os.getenv("APPIUM_HOST"),
-            "APPIUM_URL": app.test_executor.config.APPIUM_URL,
-        }
+        return {"status": "ok", "queue_depth": app.queue_manager.depth()}
 
     app.queue_manager = QueueManager(max_size=cfg.MAX_QUEUE_SIZE)
     app.device_manager = DeviceManager(cfg)
