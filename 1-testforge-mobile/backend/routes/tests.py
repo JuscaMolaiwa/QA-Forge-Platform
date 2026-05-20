@@ -3,6 +3,7 @@ from models import TestSession, SessionStatus
 from services.test_executor import create_session
 from utils.validators import validate_test_payload
 from extensions import db
+import threading
 
 tests_bp = Blueprint("tests", __name__, url_prefix="/api/tests")
 
@@ -10,6 +11,29 @@ tests_bp = Blueprint("tests", __name__, url_prefix="/api/tests")
 def _queue():
     return current_app.queue_manager
 
+
+# @tests_bp.post("/")
+# def submit_test():
+#     data = request.get_json(silent=True) or {}
+#     ok, msg = validate_test_payload(data)
+#     if not ok:
+#         return jsonify({"error": msg}), 400
+
+#     session = create_session(
+#         test_name=data["test_name"],
+#         test_content=data.get("test_content", ""),
+#         test_file=data.get("test_file", ""),
+#         app_path=data.get("app_path", ""),
+#     )
+
+#     if not _queue().enqueue(session.session_id):
+#         session.status = SessionStatus.ERROR
+#         session.error_message = "Queue is full — try again later"
+#         from extensions import db
+#         db.session.commit()
+#         return jsonify({"error": "Queue is full"}), 503
+
+#     return jsonify(session.to_dict()), 202
 
 @tests_bp.post("/")
 def submit_test():
@@ -28,9 +52,19 @@ def submit_test():
     if not _queue().enqueue(session.session_id):
         session.status = SessionStatus.ERROR
         session.error_message = "Queue is full — try again later"
-        from extensions import db
         db.session.commit()
         return jsonify({"error": "Queue is full"}), 503
+
+    # Auto-process queue in background after enqueueing a new session
+    app = current_app._get_current_object()
+    def _auto_process():
+        with app.app_context():
+            from extensions import db as _db
+            session_id = app.queue_manager.dequeue()
+            if session_id:
+                _db.session.remove()
+                app.test_executor._execute(session_id)
+    threading.Thread(target=_auto_process, daemon=True).start()
 
     return jsonify(session.to_dict()), 202
 
