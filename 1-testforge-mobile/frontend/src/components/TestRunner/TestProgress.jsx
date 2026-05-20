@@ -1,8 +1,17 @@
-import React from "react";
+import React, { useState } from "react";
 import StatusBadge from "../Dashboard/StatusBadge";
 
+const INITIAL_SHOW = 3;
+
 export default function TestProgress({ sessions, onCancel }) {
-  const active = sessions.filter((s) => ["queued", "running"].includes(s.status));
+  const [showAll, setShowAll] = useState(false);
+
+  const active = (Array.isArray(sessions) ? sessions : []).filter((s) =>
+    ["queued", "running"].includes(s.status)
+  );
+
+  const visible = showAll ? active : active.slice(0, INITIAL_SHOW);
+  const hasMore = active.length > INITIAL_SHOW;
 
   if (active.length === 0) {
     return (
@@ -14,7 +23,7 @@ export default function TestProgress({ sessions, onCancel }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-      {active.map((s) => (
+      {visible.map((s) => (
         <div
           key={s.session_id}
           className="card"
@@ -42,6 +51,16 @@ export default function TestProgress({ sessions, onCancel }) {
           )}
         </div>
       ))}
+
+      {hasMore && (
+        <button
+          className="btn-ghost"
+          onClick={() => setShowAll((v) => !v)}
+          style={{ fontSize: 12, padding: "6px 0", width: "100%", borderRadius: 6 }}
+        >
+          {showAll ? "↑ View less" : `↓ View ${active.length - INITIAL_SHOW} more`}
+        </button>
+      )}
     </div>
   );
 }

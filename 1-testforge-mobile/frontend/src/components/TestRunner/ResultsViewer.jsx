@@ -1,9 +1,18 @@
 import React, { useState } from "react";
 import StatusBadge from "../Dashboard/StatusBadge";
 
+const INITIAL_SHOW = 3;
+
 export default function ResultsViewer({ sessions }) {
   const [selected, setSelected] = useState(null);
-  const finished = sessions.filter((s) => ["passed", "failed", "error", "cancelled"].includes(s.status));
+  const [showAll, setShowAll] = useState(false);
+
+  const finished = (Array.isArray(sessions) ? sessions : []).filter((s) =>
+    ["passed", "failed", "error", "cancelled"].includes(s.status)
+  );
+
+  const visible = showAll ? finished : finished.slice(0, INITIAL_SHOW);
+  const hasMore = finished.length > INITIAL_SHOW;
 
   if (finished.length === 0) {
     return (
@@ -16,7 +25,7 @@ export default function ResultsViewer({ sessions }) {
   return (
     <div style={{ display: "grid", gridTemplateColumns: selected ? "1fr 1fr" : "1fr", gap: 12 }}>
       <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-        {finished.map((s) => (
+        {visible.map((s) => (
           <div
             key={s.session_id}
             className="card"
@@ -46,6 +55,19 @@ export default function ResultsViewer({ sessions }) {
             )}
           </div>
         ))}
+
+        {/* View more / less toggle */}
+        {hasMore && (
+          <button
+            className="btn-ghost"
+            onClick={() => setShowAll((v) => !v)}
+            style={{ fontSize: 12, padding: "6px 0", width: "100%", borderRadius: 6 }}
+          >
+            {showAll
+              ? "↑ View less"
+              : `↓ View ${finished.length - INITIAL_SHOW} more`}
+          </button>
+        )}
       </div>
 
       {selected && (() => {
