@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import DeviceCard from "./DeviceCard";
 import { registerDevice, syncDevices } from "../../api/client";
 
-export default function DeviceGrid({ devices, loading, error, onSync, onDeleted }) {
+export default function DeviceGrid({ devices, loading, error, onSync, onReload, onDeleted }) {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ udid: "", name: "", platform: "android", platform_version: "", model: "" });
   const [submitting, setSubmitting] = useState(false);
@@ -23,7 +23,7 @@ export default function DeviceGrid({ devices, loading, error, onSync, onDeleted 
       await registerDevice(form);
       setShowForm(false);
       setForm({ udid: "", name: "", platform: "android", platform_version: "", model: "" });
-      onSync();
+      onReload();
     } catch (err) {
       setFormError(err.message);
     } finally {

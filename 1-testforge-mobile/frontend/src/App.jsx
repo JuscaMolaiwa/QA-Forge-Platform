@@ -26,21 +26,11 @@ export default function App() {
   }, [reload]);
 
   // WebSocket live updates
-  // const handleSessionUpdate = useCallback((updated) => {
-  //   setSessions((prev) => {
-  //     const idx = prev.findIndex((s) => s.session_id === updated.session_id);
-  //     if (idx === -1) return [updated, ...prev];
-  //     const next = [...prev];
-  //     next[idx] = updated;
-  //     return next;
-  //   });
-  // }, []);
   const handleSessionUpdate = useCallback((updated) => {
     setSessions((prev) => {
-      const list = Array.isArray(prev) ? prev : [];
-      const idx = list.findIndex((s) => s.session_id === updated.session_id);
-      if (idx === -1) return [updated, ...list];
-      const next = [...list];
+      const idx = prev.findIndex((s) => s.session_id === updated.session_id);
+      if (idx === -1) return [updated, ...prev];
+      const next = [...prev];
       next[idx] = updated;
       return next;
     });
@@ -57,11 +47,10 @@ export default function App() {
           getQueueStatus(),
           getSummary(),
         ]);
-        //setSessions(s);
-        setSessions(Array.isArray(s) ? s : (s?.sessions ?? s?.tests ?? []));
+        setSessions(s);
         setQueueDepth(q.depth);
         setSummary(sum);
-      } catch (_) { }
+      } catch (_) {}
     };
     load();
     const id = setInterval(load, 8000);
@@ -91,6 +80,7 @@ export default function App() {
             loading={loading}
             error={error}
             onSync={syncAdb}
+            onReload={reload}
             onDeleted={handleDeleteDevice}
           />
         )}
@@ -111,17 +101,17 @@ export default function App() {
             </div>
 
             {/* Runner + active sessions */}
-            <div className="test-runner-grid">
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem" }}>
               <div className="card" style={{ padding: "1.5rem" }}>
                 <TestForm
                   prefill={prefill}
                   onSubmitted={(s) => setSessions((prev) => [s, ...prev])}
                 />
               </div>
-              <div className="test-runner-col">
+              <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
                 <div className="card" style={{ padding: "1.25rem" }}>
                   <div style={{ fontWeight: 600, marginBottom: 12 }}>
-                    Active ({(Array.isArray(sessions) ? sessions : []).filter((s) => ["queued", "running"].includes(s.status)).length})
+                    Active ({sessions.filter((s) => ["queued", "running"].includes(s.status)).length})
                   </div>
                   <TestProgress sessions={sessions} onCancel={handleCancel} />
                 </div>
