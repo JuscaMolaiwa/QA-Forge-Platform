@@ -2,6 +2,7 @@ from flask import Blueprint, jsonify, request, current_app
 from models import TestSession, SessionStatus
 from services.test_executor import create_session
 from utils.validators import validate_test_payload
+from extensions import db
 
 tests_bp = Blueprint("tests", __name__, url_prefix="/api/tests")
 
@@ -79,3 +80,20 @@ def queue_status():
         "depth": q.depth(),
         "pending": q.snapshot(),
     })
+
+@tests_bp.post("/process")
+def process_queue():
+    """Trigger one queue cycle — workaround for free tier background thread limits."""
+    import threading
+
+    session_id = current_app.queue_manager.dequeue()
+    if not session_id:
+        return jsonify({"message": "Queue empty"}), 200
+
+    def run():
+        with current_app.app_context():
+            db.session.remove()
+            current_app.test_executor._execute(session_id)
+
+    threading.Thread(target=run, daemon=True).start()
+    return jsonify({"message": f"Processing {session_id}"}), 202
