@@ -42,12 +42,7 @@ export default function TestForm({ onSubmitted, prefill }) {
     const content = prefill.content || "";
     const platform = prefill.platform || "android";
     setFromLibrary(name);
-    setForm({
-      test_name: name,
-      test_content: content,
-      app_path: "",
-      platform,
-    });
+    setForm({ test_name: name, test_content: content, app_path: "", platform });
     setSuccess(null);
     setError("");
   }, [prefill]);
@@ -76,34 +71,26 @@ export default function TestForm({ onSubmitted, prefill }) {
 
   return (
     <div>
-      <div style={{ marginBottom: "1.25rem" }}>
+      {/* Header */}
+      <div style={{ marginBottom: fromLibrary ? "0.75rem" : "1.25rem" }}>
         <span style={{ fontWeight: 600, fontSize: 16 }}>Run Test</span>
-
-        {fromLibrary && (
-          <div style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
-            background: "var(--brand-light)",
-            border: "1px solid var(--brand-soft)",
-            borderRadius: 8,
-            padding: "10px 14px",
-            marginBottom: 4,
-            fontSize: 13,
-          }}>
-            <span style={{ flex: 1, color: "var(--brand)", fontWeight: 500 }}>
-              📂 <strong>{fromLibrary}</strong> loaded — review the script below and click <strong>▶ Run Test</strong> to execute
-            </span>
-            <button
-              className="btn-ghost"
-              style={{ fontSize: 11, padding: "2px 8px", flexShrink: 0 }}
-              onClick={() => setFromLibrary(null)}
-            >
-              ✕
-            </button>
-          </div>
-        )}
       </div>
+
+      {/* Prefill banner */}
+      {fromLibrary && (
+        <div className="prefill-banner">
+          <span className="prefill-banner-text">
+            📂 <strong>{fromLibrary}</strong> loaded — review the script and click <strong>▶ Run Test</strong> to execute
+          </span>
+          <button
+            className="btn-ghost"
+            style={{ fontSize: 11, padding: "2px 8px", flexShrink: 0 }}
+            onClick={() => setFromLibrary(null)}
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       {error && <div className="error-msg" style={{ marginBottom: 12 }}>{error}</div>}
 
@@ -118,6 +105,7 @@ export default function TestForm({ onSubmitted, prefill }) {
       )}
 
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        {/* Test name */}
         <div>
           <label>Test Name *</label>
           <input
@@ -127,10 +115,14 @@ export default function TestForm({ onSubmitted, prefill }) {
           />
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+        {/* Platform + App Path */}
+        <div className="form-row-two">
           <div>
             <label>Platform</label>
-            <select value={form.platform} onChange={(e) => setForm((f) => ({ ...f, platform: e.target.value }))}>
+            <select
+              value={form.platform}
+              onChange={(e) => setForm((f) => ({ ...f, platform: e.target.value }))}
+            >
               <option value="android">Android</option>
               <option value="ios">iOS</option>
             </select>
@@ -145,6 +137,7 @@ export default function TestForm({ onSubmitted, prefill }) {
           </div>
         </div>
 
+        {/* Script */}
         <div>
           <label>Test Script *</label>
           <textarea
@@ -155,7 +148,8 @@ export default function TestForm({ onSubmitted, prefill }) {
           />
         </div>
 
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        {/* Footer */}
+        <div className="form-footer">
           <button className="btn-ghost" onClick={handleReset}>Reset</button>
           <button
             className="btn-primary"

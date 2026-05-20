@@ -105,6 +105,8 @@ label {
   font-size: 13px;
 }
 
+/* ── Layout ────────────────────────────────────────────────────────────────── */
+
 .test-runner-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -117,8 +119,67 @@ label {
   gap: 1rem;
 }
 
-@media (max-width: 700px) {
+/* ── Form components ───────────────────────────────────────────────────────── */
+
+.form-row-two {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.prefill-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: var(--brand-light);
+  border: 1px solid var(--brand-soft);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.prefill-banner-text {
+  flex: 1;
+  color: var(--brand);
+  font-weight: 500;
+}
+
+.form-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.form-footer .btn-primary,
+.form-footer .btn-ghost {
+  white-space: nowrap;
+}
+
+/* ── Mobile ────────────────────────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  main {
+    padding: 1rem 0.75rem !important;
+  }
+
   .test-runner-grid {
     grid-template-columns: 1fr;
+  }
+
+  .form-row-two {
+    grid-template-columns: 1fr;
+  }
+
+  .test-runner-col .card {
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .test-runner-col .card,
+  .card.pad-mobile {
+    padding: 1rem !important;
   }
 }
