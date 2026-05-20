@@ -14,15 +14,26 @@ def list_devices():
     return jsonify([d.to_dict() for d in devices])
 
 
+# @devices_bp.post("/")
+# def register_device():
+#     data = request.get_json(silent=True) or {}
+#     ok, msg = validate_device_payload(data)
+#     if not ok:
+#         return jsonify({"error": msg}), 400
+#     device = _dm().register_device(data)
+#     return jsonify(device.to_dict()), 201
+
 @devices_bp.post("/")
 def register_device():
     data = request.get_json(silent=True) or {}
     ok, msg = validate_device_payload(data)
     if not ok:
         return jsonify({"error": msg}), 400
-    device = _dm().register_device(data)
+    try:
+        device = _dm().register_device(data)
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 409
     return jsonify(device.to_dict()), 201
-
 
 @devices_bp.get("/<int:device_id>")
 def get_device(device_id):

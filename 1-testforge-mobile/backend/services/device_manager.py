@@ -75,24 +75,45 @@ class DeviceManager:
         device.appium_port = None
         db.session.commit()
 
+    # def register_device(self, data: dict) -> Device:
+    #     """Manually register a device (e.g. cloud or remote)."""
+    #     device = Device.query.filter_by(udid=data["udid"]).first()
+    #     if device is None:
+    #         device = Device(
+    #             udid=data["udid"],
+    #             name=data["name"],
+    #             platform=data["platform"].lower(),
+    #             platform_version=data.get("platform_version"),
+    #             model=data.get("model"),
+    #             is_cloud=data.get("is_cloud", False),
+    #             cloud_provider=data.get("cloud_provider"),
+    #         )
+    #         db.session.add(device)
+    #     else:
+    #         device.name = data["name"]
+    #         device.platform = data["platform"].lower()
+
+    #     device.status = DeviceStatus.ONLINE
+    #     device.last_seen = datetime.now(timezone.utc)
+    #     db.session.commit()
+    #     return device
+
     def register_device(self, data: dict) -> Device:
         """Manually register a device (e.g. cloud or remote)."""
-        device = Device.query.filter_by(udid=data["udid"]).first()
-        if device is None:
-            device = Device(
-                udid=data["udid"],
-                name=data["name"],
-                platform=data["platform"].lower(),
-                platform_version=data.get("platform_version"),
-                model=data.get("model"),
-                is_cloud=data.get("is_cloud", False),
-                cloud_provider=data.get("cloud_provider"),
-            )
-            db.session.add(device)
-        else:
-            device.name = data["name"]
-            device.platform = data["platform"].lower()
+        existing = Device.query.filter_by(udid=data["udid"]).first()
+        if existing:
+            raise ValueError(f"Device with UDID '{data['udid']}' is already registered.")
 
+        device = Device(
+            udid=data["udid"],
+            name=data["name"],
+            platform=data["platform"].lower(),
+            platform_version=data.get("platform_version"),
+            model=data.get("model"),
+            is_cloud=data.get("is_cloud", False),
+            cloud_provider=data.get("cloud_provider"),
+        )
+        db.session.add(device)
         device.status = DeviceStatus.ONLINE
         device.last_seen = datetime.now(timezone.utc)
         db.session.commit()
