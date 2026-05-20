@@ -83,20 +83,23 @@ def queue_status():
 
 @tests_bp.post("/process")
 def process_queue():
-    """Trigger one queue cycle — workaround for free tier background thread limits."""
-    import threading
+    """Trigger one queue cycle synchronously."""
+    from extensions import db
 
     session_id = current_app.queue_manager.dequeue()
     if not session_id:
         return jsonify({"message": "Queue empty"}), 200
 
-    def run():
-        with current_app.app_context():
-            db.session.remove()
-            current_app.test_executor._execute(session_id)
-
-    threading.Thread(target=run, daemon=True).start()
-    return jsonify({"message": f"Processing {session_id}"}), 202
+    db.session.remove()
+    current_app.test_executor._execute(session_id)
+    
+    # Return the session result
+    from models import TestSession
+    session = TestSession.query.filter_by(session_id=session_id).first()
+    return jsonify({
+        "message": f"Processed {session_id}",
+        "status": session.status.value if session else "unknown"
+    }), 202
 
 @tests_bp.get("/debug/device")
 def debug_device():
