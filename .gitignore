@@ -57,4 +57,4 @@ Desktop.ini
 .vscode/
 .idea/
 *.swp
-*.swo
+*.swo1-testforge-mobile/backend/instance/*.db

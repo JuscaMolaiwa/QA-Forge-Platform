@@ -4,7 +4,13 @@ import { registerDevice, syncDevices } from "../../api/client";
 
 export default function DeviceGrid({ devices, loading, error, onSync, onReload, onDeleted }) {
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ udid: "", name: "", platform: "android", platform_version: "", model: "" });
+  const [form, setForm] = useState({
+    udid: "emulator-5554",
+    name: "Pixel_API_33",
+    platform: "android",
+    platform_version: "13",
+    model: "Pixel"
+  });
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState("");
   const [syncMsg, setSyncMsg] = useState("");
@@ -48,8 +54,8 @@ export default function DeviceGrid({ devices, loading, error, onSync, onReload, 
   };
 
   const counts = {
-    online:  safeDevices.filter((d) => d.status === "online").length,
-    busy:    safeDevices.filter((d) => d.status === "busy").length,
+    online: safeDevices.filter((d) => d.status === "online").length,
+    busy: safeDevices.filter((d) => d.status === "busy").length,
     offline: safeDevices.filter((d) => d.status === "offline").length,
   };
 
@@ -58,10 +64,10 @@ export default function DeviceGrid({ devices, loading, error, onSync, onReload, 
       {/* Stats row */}
       <div style={{ display: "flex", gap: 10, marginBottom: "1.5rem", flexWrap: "wrap" }}>
         {[
-          { label: "Online",  value: counts.online,        color: "var(--brand)" },
-          { label: "Busy",    value: counts.busy,          color: "#854f0b" },
-          { label: "Offline", value: counts.offline,       color: "var(--gray-400)" },
-          { label: "Total",   value: safeDevices.length,   color: "var(--accent)" },
+          { label: "Online", value: counts.online, color: "var(--brand)" },
+          { label: "Busy", value: counts.busy, color: "#854f0b" },
+          { label: "Offline", value: counts.offline, color: "var(--gray-400)" },
+          { label: "Total", value: safeDevices.length, color: "var(--accent)" },
         ].map(({ label, value, color }) => (
           <div key={label} className="card" style={{ flex: 1, minWidth: 100, padding: "14px 18px" }}>
             <div style={{ fontSize: 11, fontFamily: "var(--mono)", color: "var(--gray-400)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>{label}</div>
@@ -112,10 +118,10 @@ export default function DeviceGrid({ devices, loading, error, onSync, onReload, 
           {formError && <div className="error-msg" style={{ marginBottom: 10 }}>{formError}</div>}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
             {[
-              { key: "udid",             label: "UDID *" },
-              { key: "name",             label: "Name *" },
+              { key: "udid", label: "UDID *" },
+              { key: "name", label: "Name *" },
               { key: "platform_version", label: "OS Version" },
-              { key: "model",            label: "Model" },
+              { key: "model", label: "Model" },
             ].map(({ key, label }) => (
               <div key={key}>
                 <label>{label}</label>
