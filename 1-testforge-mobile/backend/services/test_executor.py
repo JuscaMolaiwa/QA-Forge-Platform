@@ -49,6 +49,7 @@ class TestExecutor:
             session_id = self.queue.dequeue()
             if session_id:
                 with self._app_context():
+                    db.session.expire_all()  # force fresh read each cycle
                     self._execute(session_id)
             else:
                 time.sleep(1)
@@ -60,6 +61,7 @@ class TestExecutor:
             logger.debug("SocketIO emit failed: %s", exc)
 
     def _execute(self, session_id: str) -> None:
+        db.session.expire_all() 
         session: Optional[TestSession] = TestSession.query.filter_by(
             session_id=session_id
         ).first()
