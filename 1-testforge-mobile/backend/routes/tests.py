@@ -83,6 +83,9 @@ def queue_status():
 
 @tests_bp.post("/process")
 def process_queue():
+    token = request.headers.get("X-Process-Token")
+    if token != current_app.config.get("SECRET_KEY"):
+        return jsonify({"error": "Unauthorized"}), 401
     """Trigger one queue cycle synchronously."""
     from extensions import db
 
@@ -101,15 +104,3 @@ def process_queue():
         "status": session.status.value if session else "unknown"
     }), 202
 
-@tests_bp.get("/debug/device")
-def debug_device():
-    from models import Device, DeviceStatus
-    from extensions import db
-    db.session.remove()
-    device = Device.query.filter_by(status=DeviceStatus.ONLINE).first()
-    all_devices = Device.query.all()
-    return jsonify({
-        "found": device.to_dict() if device else None,
-        "all": [d.to_dict() for d in all_devices],
-        "count": len(all_devices)
-    })
