@@ -102,7 +102,9 @@ class DeviceManager:
         """Manually register a device (e.g. cloud or remote)."""
         existing = Device.query.filter_by(udid=data["udid"]).first()
         if existing:
-            raise ValueError(f"Device with UDID '{data['udid']}' is already registered.")
+            raise ValueError(
+                f"Device with UDID '{data['udid']}' is already registered."
+            )
 
         device = Device(
             udid=data["udid"],

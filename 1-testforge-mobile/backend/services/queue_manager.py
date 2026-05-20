@@ -21,7 +21,9 @@ class QueueManager:
                 logger.warning("Queue full — rejected session %s", session_id)
                 return False
             self._queue.append(session_id)
-            logger.info("Enqueued session %s (queue depth: %d)", session_id, len(self._queue))
+            logger.info(
+                "Enqueued session %s (queue depth: %d)", session_id, len(self._queue)
+            )
             return True
 
     def dequeue(self) -> Optional[str]:

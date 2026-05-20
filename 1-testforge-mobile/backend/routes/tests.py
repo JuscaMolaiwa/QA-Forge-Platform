@@ -7,33 +7,38 @@ import threading
 
 tests_bp = Blueprint("tests", __name__, url_prefix="/api/tests")
 
+# Single persistent queue worker to process test sessions sequentially, ensuring proper DB session handling and avoiding concurrency issues.
+_worker_lock = threading.Lock()
+_worker_running = False
+
+
+def _start_queue_worker(app):
+    global _worker_running
+    with _worker_lock:
+        if _worker_running:
+            return  # already running, it will loop and pick up the new session
+        _worker_running = True
+
+    def _worker():
+        global _worker_running
+        with app.app_context():
+            from extensions import db as _db
+
+            while True:
+                session_id = app.queue_manager.dequeue()
+                if not session_id:
+                    with _worker_lock:
+                        _worker_running = False
+                    break
+                _db.session.remove()
+                app.test_executor._execute(session_id)  # blocks until done, then loops
+
+    threading.Thread(target=_worker, daemon=True).start()
+
 
 def _queue():
     return current_app.queue_manager
 
-
-# @tests_bp.post("/")
-# def submit_test():
-#     data = request.get_json(silent=True) or {}
-#     ok, msg = validate_test_payload(data)
-#     if not ok:
-#         return jsonify({"error": msg}), 400
-
-#     session = create_session(
-#         test_name=data["test_name"],
-#         test_content=data.get("test_content", ""),
-#         test_file=data.get("test_file", ""),
-#         app_path=data.get("app_path", ""),
-#     )
-
-#     if not _queue().enqueue(session.session_id):
-#         session.status = SessionStatus.ERROR
-#         session.error_message = "Queue is full — try again later"
-#         from extensions import db
-#         db.session.commit()
-#         return jsonify({"error": "Queue is full"}), 503
-
-#     return jsonify(session.to_dict()), 202
 
 @tests_bp.post("/")
 def submit_test():
@@ -55,16 +60,7 @@ def submit_test():
         db.session.commit()
         return jsonify({"error": "Queue is full"}), 503
 
-    # Auto-process queue in background after enqueueing a new session
-    app = current_app._get_current_object()
-    def _auto_process():
-        with app.app_context():
-            from extensions import db as _db
-            session_id = app.queue_manager.dequeue()
-            if session_id:
-                _db.session.remove()
-                app.test_executor._execute(session_id)
-    threading.Thread(target=_auto_process, daemon=True).start()
+    _start_queue_worker(current_app._get_current_object())
 
     return jsonify(session.to_dict()), 202
 
@@ -102,7 +98,6 @@ def cancel_session(session_id):
     removed = _queue().remove(session_id)
     if removed or session.status == SessionStatus.QUEUED:
         session.status = SessionStatus.CANCELLED
-        from extensions import db
         db.session.commit()
     return jsonify(session.to_dict())
 
@@ -110,10 +105,13 @@ def cancel_session(session_id):
 @tests_bp.get("/queue/status")
 def queue_status():
     q = _queue()
-    return jsonify({
-        "depth": q.depth(),
-        "pending": q.snapshot(),
-    })
+    return jsonify(
+        {
+            "depth": q.depth(),
+            "pending": q.snapshot(),
+        }
+    )
+
 
 @tests_bp.post("/process")
 def process_queue():
@@ -121,20 +119,20 @@ def process_queue():
     if token != current_app.config.get("SECRET_KEY"):
         return jsonify({"error": "Unauthorized"}), 401
     """Trigger one queue cycle synchronously."""
-    from extensions import db
-
     session_id = current_app.queue_manager.dequeue()
     if not session_id:
         return jsonify({"message": "Queue empty"}), 200
 
     db.session.remove()
     current_app.test_executor._execute(session_id)
-    
-    # Return the session result
-    from models import TestSession
-    session = TestSession.query.filter_by(session_id=session_id).first()
-    return jsonify({
-        "message": f"Processed {session_id}",
-        "status": session.status.value if session else "unknown"
-    }), 202
 
+    session = TestSession.query.filter_by(session_id=session_id).first()
+    return (
+        jsonify(
+            {
+                "message": f"Processed {session_id}",
+                "status": session.status.value if session else "unknown",
+            }
+        ),
+        202,
+    )

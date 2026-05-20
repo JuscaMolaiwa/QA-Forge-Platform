@@ -23,7 +23,9 @@ logger = get_logger(__name__)
 class TestExecutor:
     """Pulls sessions from the queue and runs them against available devices."""
 
-    def __init__(self, config: Config, device_manager: DeviceManager, queue: QueueManager):
+    def __init__(
+        self, config: Config, device_manager: DeviceManager, queue: QueueManager
+    ):
         self.config = config
         self.device_manager = device_manager
         self.queue = queue
@@ -34,7 +36,9 @@ class TestExecutor:
     def start(self, app) -> None:
         self._app_context = app.app_context
         self._running = True
-        self._thread = threading.Thread(target=self._loop, daemon=True, name="TestExecutor")
+        self._thread = threading.Thread(
+            target=self._loop, daemon=True, name="TestExecutor"
+        )
         self._thread.start()
         logger.info("TestExecutor started")
 
@@ -49,7 +53,7 @@ class TestExecutor:
             session_id = self.queue.dequeue()
             if session_id:
                 with self._app_context():
-                    db.session.remove()   # drop stale connection, get a fresh one
+                    db.session.remove()  # drop stale connection, get a fresh one
                     self._execute(session_id)
             else:
                 time.sleep(1)
@@ -104,7 +108,9 @@ class TestExecutor:
             session.passed_count = passed
             session.failed_count = failed
             session.total_count = total
-            session.status = SessionStatus.PASSED if failed == 0 else SessionStatus.FAILED
+            session.status = (
+                SessionStatus.PASSED if failed == 0 else SessionStatus.FAILED
+            )
         except Exception as exc:
             logger.exception("Execution error for %s: %s", session_id, exc)
             session.error_message = str(exc)
@@ -112,9 +118,12 @@ class TestExecutor:
         finally:
             session.finished_at = datetime.now(timezone.utc)
             if session.started_at:
-                delta = session.finished_at - session.started_at.replace(
-                    tzinfo=timezone.utc
-                ) if session.started_at.tzinfo is None else session.finished_at - session.started_at
+                delta = (
+                    session.finished_at
+                    - session.started_at.replace(tzinfo=timezone.utc)
+                    if session.started_at.tzinfo is None
+                    else session.finished_at - session.started_at
+                )
                 session.duration_seconds = delta.total_seconds()
             db.session.commit()
             stop_appium(port)
@@ -143,17 +152,27 @@ class TestExecutor:
                 test_path = session.test_file
 
             env = os.environ.copy()
-            env.update({
-                "APPIUM_HOST": self.config.APPIUM_URL,  # full URL — handles ngrok & local
-                "APPIUM_PORT": str(port),
-                "DEVICE_UDID": device.udid,
-                "PLATFORM_NAME": device.platform,
-                "PLATFORM_VERSION": device.platform_version or "",
-                "APP_PATH": session.app_path or "",
-            })
+            env.update(
+                {
+                    "APPIUM_HOST": self.config.APPIUM_URL,  # full URL — handles ngrok & local
+                    "APPIUM_PORT": str(port),
+                    "DEVICE_UDID": device.udid,
+                    "PLATFORM_NAME": device.platform,
+                    "PLATFORM_VERSION": device.platform_version or "",
+                    "APP_PATH": session.app_path or "",
+                }
+            )
 
             result = subprocess.run(
-                [sys.executable, "-m", "pytest", test_path, "-v", "--tb=short", "--no-header"],
+                [
+                    sys.executable,
+                    "-m",
+                    "pytest",
+                    test_path,
+                    "-v",
+                    "--tb=short",
+                    "--no-header",
+                ],
                 capture_output=True,
                 text=True,
                 timeout=self.config.SESSION_TIMEOUT_SECONDS,
@@ -194,8 +213,9 @@ def _parse_pytest_summary(log: str) -> tuple[int, int, int]:
     return passed, failed, passed + failed
 
 
-def create_session(test_name: str, test_content: str = "", test_file: str = "",
-                   app_path: str = "") -> TestSession:
+def create_session(
+    test_name: str, test_content: str = "", test_file: str = "", app_path: str = ""
+) -> TestSession:
     session = TestSession(
         session_id=str(uuid.uuid4()),
         test_name=test_name,
