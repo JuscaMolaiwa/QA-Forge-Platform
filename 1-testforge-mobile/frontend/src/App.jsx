@@ -101,14 +101,14 @@ export default function App() {
             </div>
 
             {/* Runner + active sessions */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem" }}>
+            <div className="test-runner-grid">
               <div className="card" style={{ padding: "1.5rem" }}>
                 <TestForm
                   prefill={prefill}
                   onSubmitted={(s) => setSessions((prev) => [s, ...prev])}
                 />
               </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              <div className="test-runner-col">
                 <div className="card" style={{ padding: "1.25rem" }}>
                   <div style={{ fontWeight: 600, marginBottom: 12 }}>
                     Active ({sessions.filter((s) => ["queued", "running"].includes(s.status)).length})
