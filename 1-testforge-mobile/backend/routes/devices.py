@@ -41,8 +41,20 @@ def delete_device(device_id):
     return jsonify({"message": "Device deleted"})
 
 
+# @devices_bp.post("/sync")
+# def sync_devices():
+#     """Trigger an ADB scan to discover and sync connected devices."""
+#     synced = _dm().sync_adb_devices()
+#     return jsonify({"synced": len(synced), "devices": [d.to_dict() for d in synced]})
+
 @devices_bp.post("/sync")
 def sync_devices():
-    """Trigger an ADB scan to discover and sync connected devices."""
+    import shutil
+    if not shutil.which(current_app.device_manager.config.ADB_PATH):
+        return jsonify({
+            "error": "ADB not available on this server. Register devices manually.",
+            "synced": 0,
+            "devices": []
+        }), 503
     synced = _dm().sync_adb_devices()
     return jsonify({"synced": len(synced), "devices": [d.to_dict() for d in synced]})

@@ -1,12 +1,13 @@
 import React, { useState } from "react";
 import DeviceCard from "./DeviceCard";
-import { registerDevice } from "../../api/client";
+import { registerDevice, syncDevices } from "../../api/client";
 
 export default function DeviceGrid({ devices, loading, error, onSync, onDeleted }) {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ udid: "", name: "", platform: "android", platform_version: "", model: "" });
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState("");
+  const [syncMsg, setSyncMsg] = useState("");
 
   // Normalise: API may return { devices: [] }, null, or a bare array
   const safeDevices = Array.isArray(devices)
@@ -28,6 +29,22 @@ export default function DeviceGrid({ devices, loading, error, onSync, onDeleted 
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleSync = async () => {
+    setSyncMsg("");
+    try {
+      const result = await syncDevices();
+      if (result.error) {
+        setSyncMsg(result.error);
+        return;
+      }
+      setSyncMsg(`Synced ${result.synced} device(s)`);
+      onSync();
+    } catch (err) {
+      setSyncMsg("ADB not available on this server — register devices manually.");
+    }
+    setTimeout(() => setSyncMsg(""), 5000);
   };
 
   const counts = {
@@ -58,11 +75,35 @@ export default function DeviceGrid({ devices, loading, error, onSync, onDeleted 
         <span style={{ fontSize: 13, fontWeight: 600, flex: 1, color: "var(--gray-900)" }}>
           Devices ({safeDevices.length})
         </span>
-        <button className="btn-ghost" onClick={onSync}>↻ Sync ADB</button>
+        <button
+          className="btn-ghost"
+          onClick={handleSync}
+          title="Requires ADB — only works in local mode"
+        >
+          ↻ Sync ADB
+        </button>
         <button className="btn-primary" onClick={() => setShowForm((v) => !v)}>
           {showForm ? "Cancel" : "+ Register"}
         </button>
       </div>
+
+      {/* Sync message */}
+      {syncMsg && (
+        <div
+          className={syncMsg.includes("not available") ? "error-msg" : ""}
+          style={{
+            marginBottom: "1rem",
+            padding: "8px 12px",
+            borderRadius: 6,
+            fontSize: 13,
+            background: syncMsg.includes("not available") ? "var(--danger-light)" : "var(--brand-light)",
+            color: syncMsg.includes("not available") ? "var(--danger)" : "var(--brand)",
+            border: `1px solid ${syncMsg.includes("not available") ? "#f7c1c1" : "var(--brand-soft)"}`,
+          }}
+        >
+          {syncMsg.includes("not available") ? "⚠ " : "✓ "}{syncMsg}
+        </div>
+      )}
 
       {/* Register form */}
       {showForm && (
@@ -108,7 +149,7 @@ export default function DeviceGrid({ devices, loading, error, onSync, onDeleted 
       ) : safeDevices.length === 0 ? (
         <div className="card" style={{ padding: "3rem", textAlign: "center", color: "var(--gray-400)" }}>
           <div style={{ fontSize: 32, marginBottom: 8 }}>📱</div>
-          <div>No devices found. Connect a device via USB or click Sync ADB.</div>
+          <div>No devices found. Register a device manually or connect via USB in local mode.</div>
         </div>
       ) : (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 12 }}>
