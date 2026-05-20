@@ -4,6 +4,7 @@ from services.test_executor import create_session
 from utils.validators import validate_test_payload
 from extensions import db
 import threading
+import os
 
 tests_bp = Blueprint("tests", __name__, url_prefix="/api/tests")
 
@@ -136,3 +137,25 @@ def process_queue():
         ),
         202,
     )
+
+@tests_bp.get("/<string:session_id>/screenshots")
+def get_screenshots(session_id):
+    import json, base64 as b64
+    session = TestSession.query.filter_by(session_id=session_id).first()
+    if not session:
+        return jsonify({"error": "Session not found"}), 404
+
+    paths = json.loads(session.screenshots or "[]")
+    result = []
+    for path in paths:
+        if os.path.exists(path):
+            try:
+                with open(path, "rb") as f:
+                    data = b64.b64encode(f.read()).decode()
+                result.append({
+                    "name": os.path.basename(path),
+                    "data": f"data:image/png;base64,{data}",
+                })
+            except Exception:
+                pass
+    return jsonify(result)

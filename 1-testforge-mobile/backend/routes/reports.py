@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request
 from sqlalchemy import func
-from models import TestSession, SessionStatus
+from models import TestSession, SessionStatus, Screenshot
 from extensions import db
 
 reports_bp = Blueprint("reports", __name__, url_prefix="/api/reports")
@@ -59,7 +59,6 @@ def trends():
         .order_by("day")
         .all()
     )
-    # Build a day → {passed, failed} map
     trend_map: dict = {}
     for day, status, cnt in rows:
         if day not in trend_map:
@@ -68,3 +67,35 @@ def trends():
         trend_map[day][key] = cnt
 
     return jsonify(sorted(trend_map.values(), key=lambda x: x["day"]))
+
+
+@reports_bp.post("/screenshots")
+def save_screenshot():
+    """Receive a screenshot from the conftest plugin and store it."""
+    data = request.get_json(silent=True) or {}
+    session_id = data.get("session_id", "").strip()
+    image_b64 = data.get("image_b64", "").strip()
+    if not session_id or not image_b64:
+        return jsonify({"error": "session_id and image_b64 are required"}), 400
+    shot = Screenshot(
+        session_id=session_id,
+        step_name=data.get("step_name", "step"),
+        step_index=int(data.get("step_index", 0)),
+        image_b64=image_b64,
+        passed=data.get("passed"),
+    )
+    db.session.add(shot)
+    db.session.commit()
+    return jsonify(shot.to_dict()), 201
+
+
+@reports_bp.get("/screenshots/<string:session_id>")
+def get_screenshots(session_id):
+    """Return all screenshots for a session ordered by step index."""
+    shots = (
+        Screenshot.query
+        .filter_by(session_id=session_id)
+        .order_by(Screenshot.step_index)
+        .all()
+    )
+    return jsonify([s.to_dict() for s in shots])

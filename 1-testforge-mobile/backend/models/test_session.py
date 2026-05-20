@@ -1,7 +1,7 @@
 import enum
 from datetime import datetime, timezone
 from extensions import db
-
+import json
 
 class SessionStatus(str, enum.Enum):
     QUEUED = "queued"
@@ -11,10 +11,8 @@ class SessionStatus(str, enum.Enum):
     ERROR = "error"
     CANCELLED = "cancelled"
 
-
 class TestSession(db.Model):
     __tablename__ = "test_sessions"
-
     id = db.Column(db.Integer, primary_key=True)
     session_id = db.Column(db.String(64), unique=True, nullable=False, index=True)
     device_id = db.Column(db.Integer, db.ForeignKey("devices.id"), nullable=True)
@@ -32,6 +30,7 @@ class TestSession(db.Model):
     passed_count = db.Column(db.Integer, default=0)
     failed_count = db.Column(db.Integer, default=0)
     total_count = db.Column(db.Integer, default=0)
+    screenshots = db.Column(db.Text, default="[]") 
 
     device = db.relationship("Device", back_populates="sessions")
 
@@ -55,6 +54,7 @@ class TestSession(db.Model):
             "passed_count": self.passed_count,
             "failed_count": self.failed_count,
             "total_count": self.total_count,
+            "screenshots": json.loads(self.screenshots or "[]"),  # ← expose to frontend
         }
 
     def __repr__(self):

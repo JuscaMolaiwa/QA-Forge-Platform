@@ -18,7 +18,9 @@ services:
       - key: DATABASE_URL
         value: sqlite:////tmp/device_farm.db
       - key: FRONTEND_URL
-        value: https://appium-device-farm-frontend.onrender.com 
+        value: https://appium-device-farm-frontend.onrender.com
+      - key: RENDER_EXTERNAL_URL
+        value: https://appium-device-farm-backend.onrender.com
       - key: MAX_QUEUE_SIZE
         value: "50"
       - key: SESSION_TIMEOUT_SECONDS

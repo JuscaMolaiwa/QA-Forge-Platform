@@ -34,6 +34,7 @@ export const getQueueStatus = () => request("/api/tests/queue/status");
 export const getSummary = () => request("/api/reports/summary");
 export const getHistory = (limit = 30) => request(`/api/reports/history?limit=${limit}`);
 export const getTrends = (days = 7) => request(`/api/reports/trends?days=${days}`);
+export const getScreenshots = (sessionId) => request(`/api/reports/screenshots/${sessionId}`);
 
 // Library
 export const getLibrary = (params = {}) => {

@@ -1,5 +1,6 @@
 import os
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -134,22 +135,34 @@ class TestExecutor:
     def _run_test(
         self, session: TestSession, device: Device, port: int
     ) -> tuple[str, int, int, int]:
-        """Write the test to a temp file and run it via pytest."""
-        tmp_path = None
+        """Write test + conftest to a temp dir and run via pytest."""
+        tmp_dir = tempfile.mkdtemp(prefix="farm_test_")
         try:
+            # Write test file into temp dir
             if session.test_content:
-                with tempfile.NamedTemporaryFile(
-                    mode="w",
-                    suffix=".py",
-                    prefix="test_",
-                    delete=False,
-                    dir=tempfile.gettempdir(),
-                ) as f:
+                test_path = os.path.join(tmp_dir, "test_session.py")
+                with open(test_path, "w") as f:
                     f.write(session.test_content)
-                    tmp_path = f.name
-                test_path = tmp_path
             else:
                 test_path = session.test_file
+
+            # Copy conftest.py alongside the test for screenshot capture
+            src_conftest = os.path.abspath(
+                os.path.join(
+                    os.path.dirname(__file__), "..", "..", "tests", "conftest.py"
+                )
+            )
+            if os.path.exists(src_conftest):
+                shutil.copy(src_conftest, os.path.join(tmp_dir, "conftest.py"))
+                logger.info("Injected conftest.py for screenshot capture")
+            else:
+                logger.warning("conftest.py not found at %s — no screenshots", src_conftest)
+
+            # Farm API URL — conftest uses this to POST screenshots back
+            farm_api = os.environ.get(
+                "RENDER_EXTERNAL_URL",
+                f"http://localhost:{self.config.PORT}",
+            )
 
             env = os.environ.copy()
             env.update(
@@ -160,6 +173,8 @@ class TestExecutor:
                     "PLATFORM_NAME": device.platform,
                     "PLATFORM_VERSION": device.platform_version or "",
                     "APP_PATH": session.app_path or "",
+                    "FARM_API_URL": farm_api,
+                    "FARM_SESSION_ID": session.session_id,
                 }
             )
 
@@ -183,11 +198,7 @@ class TestExecutor:
             return log_output, passed, failed, total
 
         finally:
-            if tmp_path:
-                try:
-                    os.unlink(tmp_path)
-                except OSError:
-                    pass
+            shutil.rmtree(tmp_dir, ignore_errors=True)
 
     def _fail(self, session: TestSession, message: str) -> None:
         session.status = SessionStatus.ERROR
