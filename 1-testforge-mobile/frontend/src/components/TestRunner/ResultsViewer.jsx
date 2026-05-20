@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import StatusBadge from "../Dashboard/StatusBadge";
+import { getScreenshots } from "../../api/client";
 
 const INITIAL_SHOW = 3;
-const API_URL = process.env.REACT_APP_API_URL || "";
 
 export default function ResultsViewer({ sessions }) {
   const [selected, setSelected] = useState(null);
@@ -21,11 +21,11 @@ export default function ResultsViewer({ sessions }) {
   useEffect(() => {
     if (!selected) { setScreenshots([]); setActiveShot(null); return; }
     setLoadingShots(true);
-    fetch(`${API_URL}/api/tests/${selected}/screenshots`)
-      .then((r) => r.json())
+    getScreenshots(selected)
       .then((data) => {
-        setScreenshots(Array.isArray(data) ? data : []);
-        setActiveShot(Array.isArray(data) && data.length > 0 ? data[data.length - 1] : null);
+        const shots = Array.isArray(data) ? data : [];
+        setScreenshots(shots);
+        setActiveShot(shots.length > 0 ? shots[shots.length - 1] : null);
       })
       .catch(() => setScreenshots([]))
       .finally(() => setLoadingShots(false));
@@ -112,8 +112,8 @@ export default function ResultsViewer({ sessions }) {
               {/* Main preview */}
               {activeShot && (
                 <img
-                  src={activeShot.data}
-                  alt={activeShot.name}
+                  src={`data:image/png;base64,${activeShot.image_b64}`}
+                  alt={activeShot.step_name}
                   style={{
                     width: "100%", borderRadius: 6, border: "1px solid var(--gray-200)",
                     marginBottom: 8, objectFit: "contain", maxHeight: 320,
@@ -127,13 +127,13 @@ export default function ResultsViewer({ sessions }) {
                 {screenshots.map((shot, i) => (
                   <img
                     key={i}
-                    src={shot.data}
-                    alt={shot.name}
+                    src={`data:image/png;base64,${shot.image_b64}`}
+                    alt={shot.step_name}
                     onClick={() => setActiveShot(shot)}
                     style={{
                       width: 64, height: 48, objectFit: "cover",
                       borderRadius: 4, cursor: "pointer", flexShrink: 0,
-                      border: `2px solid ${activeShot?.name === shot.name ? "var(--brand-mid)" : "var(--gray-200)"}`,
+                      border: `2px solid ${activeShot?.step_index === shot.step_index ? "var(--brand-mid)" : "var(--gray-200)"}`,
                     }}
                   />
                 ))}

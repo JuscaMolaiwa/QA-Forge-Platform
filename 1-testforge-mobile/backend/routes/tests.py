@@ -138,24 +138,28 @@ def process_queue():
         202,
     )
 
+
 @tests_bp.get("/<string:session_id>/screenshots")
 def get_screenshots(session_id):
-    import json, base64 as b64
+    from models import Screenshot
+
     session = TestSession.query.filter_by(session_id=session_id).first()
     if not session:
         return jsonify({"error": "Session not found"}), 404
 
-    paths = json.loads(session.screenshots or "[]")
-    result = []
-    for path in paths:
-        if os.path.exists(path):
-            try:
-                with open(path, "rb") as f:
-                    data = b64.b64encode(f.read()).decode()
-                result.append({
-                    "name": os.path.basename(path),
-                    "data": f"data:image/png;base64,{data}",
-                })
-            except Exception:
-                pass
-    return jsonify(result)
+    shots = (
+        Screenshot.query.filter_by(session_id=session_id)
+        .order_by(Screenshot.step_index)
+        .all()
+    )
+    return jsonify(
+        [
+            {
+                "name": s.step_name,
+                "data": f"data:image/png;base64,{s.image_b64}",
+                "passed": s.passed,
+                "step_index": s.step_index,
+            }
+            for s in shots
+        ]
+    )
