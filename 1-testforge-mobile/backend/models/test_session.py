@@ -54,7 +54,7 @@ class TestSession(db.Model):
             "passed_count": self.passed_count,
             "failed_count": self.failed_count,
             "total_count": self.total_count,
-            "screenshots": json.loads(self.screenshots or "[]"),  # ← expose to frontend
+            "screenshots": json.loads(self.screenshots or "[]"),
         }
 
     def __repr__(self):

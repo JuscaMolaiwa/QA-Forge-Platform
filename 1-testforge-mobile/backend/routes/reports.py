@@ -2,6 +2,7 @@ from flask import Blueprint, jsonify, request
 from sqlalchemy import func
 from models import TestSession, SessionStatus, Screenshot
 from extensions import db
+import json
 
 reports_bp = Blueprint("reports", __name__, url_prefix="/api/reports")
 
@@ -68,7 +69,6 @@ def trends():
 
     return jsonify(sorted(trend_map.values(), key=lambda x: x["day"]))
 
-
 @reports_bp.post("/screenshots")
 def save_screenshot():
     """Receive a screenshot from the conftest plugin and store it."""
@@ -77,6 +77,7 @@ def save_screenshot():
     image_b64 = data.get("image_b64", "").strip()
     if not session_id or not image_b64:
         return jsonify({"error": "session_id and image_b64 are required"}), 400
+
     shot = Screenshot(
         session_id=session_id,
         step_name=data.get("step_name", "step"),
@@ -85,9 +86,20 @@ def save_screenshot():
         passed=data.get("passed"),
     )
     db.session.add(shot)
+
+    test_session = TestSession.query.filter_by(session_id=session_id).first()
+    if test_session:
+        existing = json.loads(test_session.screenshots or "[]")
+        existing.append({
+            "step_name": shot.step_name,
+            "step_index": shot.step_index,
+            "image_b64": shot.image_b64,
+            "passed": shot.passed,
+        })
+        test_session.screenshots = json.dumps(existing)
+
     db.session.commit()
     return jsonify(shot.to_dict()), 201
-
 
 @reports_bp.get("/screenshots/<string:session_id>")
 def get_screenshots(session_id):
