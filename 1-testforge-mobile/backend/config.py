@@ -16,6 +16,16 @@ class Config:
     APPIUM_BASE_PORT = int(os.getenv("APPIUM_BASE_PORT", 4723))
     APPIUM_MAX_SESSIONS = int(os.getenv("APPIUM_MAX_SESSIONS", 5))
 
+    # Build full Appium URL — handles local, ngrok bare hostname, or full http URL
+    _host = os.getenv("APPIUM_HOST", "localhost")
+    _port = int(os.getenv("APPIUM_BASE_PORT", 4723))
+    if _host.startswith("http"):
+        APPIUM_URL = _host
+    elif "ngrok" in _host:
+        APPIUM_URL = f"https://{_host}"
+    else:
+        APPIUM_URL = f"http://{_host}:{_port}"
+
     MAX_QUEUE_SIZE = int(os.getenv("MAX_QUEUE_SIZE", 50))
     SESSION_TIMEOUT_SECONDS = int(os.getenv("SESSION_TIMEOUT_SECONDS", 300))
 

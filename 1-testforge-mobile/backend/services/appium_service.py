@@ -1,3 +1,4 @@
+import os
 import subprocess
 import socket
 import time
@@ -9,6 +10,15 @@ from utils.logger import get_logger
 logger = get_logger(__name__)
 
 _appium_processes: dict[int, subprocess.Popen] = {}
+
+
+def _is_remote(host: str) -> bool:
+    """Return True if host is a remote URL or ngrok hostname."""
+    return (
+        host.startswith("http")
+        or "ngrok" in host
+        or "onrender" in host
+    )
 
 
 def _port_free(port: int) -> bool:
@@ -35,8 +45,7 @@ def _wait_for_port(port: int, timeout: int = 30) -> bool:
 
 def find_free_port(config: Config) -> Optional[int]:
     """Find the next available Appium port."""
-    # When using a remote Appium (ngrok), return the base port as a token
-    if config.APPIUM_HOST.startswith("http"):
+    if _is_remote(config.APPIUM_HOST):
         return config.APPIUM_BASE_PORT
     for offset in range(config.APPIUM_MAX_SESSIONS):
         port = config.APPIUM_BASE_PORT + offset
@@ -47,8 +56,7 @@ def find_free_port(config: Config) -> Optional[int]:
 
 def start_appium(config: Config, port: int) -> bool:
     """Start an Appium server — or skip if using a remote/ngrok URL."""
-    # Remote Appium (ngrok or any http host) — nothing to start locally
-    if config.APPIUM_HOST.startswith("http"):
+    if _is_remote(config.APPIUM_HOST):
         logger.info("Remote Appium at %s — skipping local start", config.APPIUM_URL)
         return True
 
@@ -59,7 +67,6 @@ def start_appium(config: Config, port: int) -> bool:
             return True
         del _appium_processes[port]
 
-    import os
     log_path = f"/tmp/appium_{port}.log"
     try:
         log_file = open(log_path, "w")
