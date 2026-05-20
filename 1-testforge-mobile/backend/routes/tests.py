@@ -117,9 +117,9 @@ def queue_status():
 
 @tests_bp.post("/process")
 def process_queue():
-    # token = request.headers.get("X-Process-Token")
-    # if token != current_app.config.get("SECRET_KEY"):
-    #     return jsonify({"error": "Unauthorized"}), 401
+    token = request.headers.get("X-Process-Token")
+    if token != current_app.config.get("SECRET_KEY"):
+        return jsonify({"error": "Unauthorized"}), 401
     """Trigger one queue cycle synchronously."""
     from extensions import db
 
