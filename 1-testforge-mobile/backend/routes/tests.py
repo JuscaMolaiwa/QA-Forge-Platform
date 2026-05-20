@@ -113,3 +113,12 @@ def debug_device():
         "all": [d.to_dict() for d in all_devices],
         "count": len(all_devices)
     })
+
+@tests_bp.get("/debug/config")
+def debug_config():
+    import os
+    return jsonify({
+        "APPIUM_HOST": os.getenv("APPIUM_HOST"),
+        "APPIUM_BASE_PORT": os.getenv("APPIUM_BASE_PORT"),
+        "APPIUM_URL": current_app.test_executor.config.APPIUM_URL,
+    })
