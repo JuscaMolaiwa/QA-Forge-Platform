@@ -12,24 +12,44 @@ from appium.webdriver.common.appiumby import AppiumBy
 @pytest.fixture(scope="module")
 def driver():
     opts = UiAutomator2Options()
+
+    # Core device config
     opts.platform_name = "Android"
-    opts.set_capability("appium:udid", os.environ.get("DEVICE_UDID", ""))
-    opts.set_capability("appium:app", os.environ.get("APP_PATH", ""))
-    opts.set_capability("appium:automationName", "UiAutomator2")
-    opts.set_capability("appium:newCommandTimeout", 180)
+    opts.automation_name = "UiAutomator2"
 
-    host = os.environ.get("APPIUM_HOST", "localhost")
-    port = os.environ.get("APPIUM_PORT", "4723")
+    # Device selection (only if provided)
+    udid = os.getenv("DEVICE_UDID")
+    if udid:
+        opts.udid = udid
 
-    if host.endswith(".ngrok-free.app") or host.endswith(".ngrok.io"):
-        appium_url = f"https://{host}"
+    # App config
+    app_path = os.getenv("APP_PATH")
+    if app_path:
+        opts.app = app_path
+
+    opts.app_package = "com.swaglabsmobileapp"
+    opts.app_activity = "com.swaglabsmobileapp.SplashActivity"
+
+    # Session behavior
+    opts.new_command_timeout = 180
+    opts.auto_grant_permissions = True
+
+    # Appium server selection
+    host = os.getenv("APPIUM_HOST", "localhost")
+    port = os.getenv("APPIUM_PORT", "4723")
+
+    if host.startswith("http"):
+        appium_url = host
     else:
         appium_url = f"http://{host}:{port}"
 
-    drv = webdriver.Remote(appium_url, options=opts)
+    driver = webdriver.Remote(
+        command_executor=appium_url,
+        options=opts
+    )
 
-    yield drv
-    drv.quit()
+    yield driver
+    driver.quit()
 
     # Log in once for the entire module
     drv.find_element(AppiumBy.ACCESSIBILITY_ID, "test-Username").send_keys("standard_user")

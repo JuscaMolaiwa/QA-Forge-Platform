@@ -12,21 +12,19 @@ _appium_processes: dict[int, subprocess.Popen] = {}
 
 
 def _port_free(port: int) -> bool:
-    for host in ("127.0.0.1", "::1", "localhost"):
+    for host in ("127.0.0.1", "::1"):
         try:
-            with socket.socket(
-                socket.AF_INET6 if host == "::1" else socket.AF_INET,
-                socket.SOCK_STREAM
-            ) as s:
+            family = socket.AF_INET6 if host == "::1" else socket.AF_INET
+            with socket.socket(family, socket.SOCK_STREAM) as s:
                 s.settimeout(1)
                 if s.connect_ex((host, port)) == 0:
-                    return False  # something is listening
+                    return False
         except OSError:
             pass
     return True
 
 
-def _wait_for_port(port: int, timeout: int = 20) -> bool:
+def _wait_for_port(port: int, timeout: int = 30) -> bool:
     deadline = time.time() + timeout
     while time.time() < deadline:
         if not _port_free(port):
@@ -37,6 +35,9 @@ def _wait_for_port(port: int, timeout: int = 20) -> bool:
 
 def find_free_port(config: Config) -> Optional[int]:
     """Find the next available Appium port."""
+    # When using a remote Appium (ngrok), return the base port as a token
+    if config.APPIUM_HOST.startswith("http"):
+        return config.APPIUM_BASE_PORT
     for offset in range(config.APPIUM_MAX_SESSIONS):
         port = config.APPIUM_BASE_PORT + offset
         if _port_free(port) and port not in _appium_processes:
@@ -45,7 +46,12 @@ def find_free_port(config: Config) -> Optional[int]:
 
 
 def start_appium(config: Config, port: int) -> bool:
-    """Start an Appium server on the given port and wait for it to be ready."""
+    """Start an Appium server — or skip if using a remote/ngrok URL."""
+    # Remote Appium (ngrok or any http host) — nothing to start locally
+    if config.APPIUM_HOST.startswith("http"):
+        logger.info("Remote Appium at %s — skipping local start", config.APPIUM_URL)
+        return True
+
     if port in _appium_processes:
         proc = _appium_processes[port]
         if proc.poll() is None:
@@ -89,7 +95,7 @@ def start_appium(config: Config, port: int) -> bool:
 
 
 def stop_appium(port: int) -> None:
-    """Stop the Appium server running on the given port."""
+    """Stop the Appium server on the given port (no-op for remote)."""
     proc = _appium_processes.pop(port, None)
     if proc and proc.poll() is None:
         proc.terminate()

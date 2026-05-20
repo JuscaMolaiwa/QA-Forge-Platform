@@ -19,10 +19,6 @@ services:
         value: sqlite:////tmp/device_farm.db
       - key: FRONTEND_URL
         value: https://appium-device-farm-frontend.onrender.com 
-      - key: APPIUM_HOST
-        value: localhost
-      - key: APPIUM_BASE_PORT
-        value: "4723"
       - key: MAX_QUEUE_SIZE
         value: "50"
       - key: SESSION_TIMEOUT_SECONDS

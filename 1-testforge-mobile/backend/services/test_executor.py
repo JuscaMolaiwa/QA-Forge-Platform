@@ -142,7 +142,7 @@ class TestExecutor:
 
             env = os.environ.copy()
             env.update({
-                "APPIUM_HOST": self.config.APPIUM_HOST,
+                "APPIUM_HOST": self.config.APPIUM_URL,  # full URL - handles ngrok & local
                 "APPIUM_PORT": str(port),
                 "DEVICE_UDID": device.udid,
                 "PLATFORM_NAME": device.platform,
