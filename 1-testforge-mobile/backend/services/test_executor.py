@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from extensions import db, socketio
-from models import TestSession, SessionStatus, Device
+from models import TestSession, SessionStatus, Device, DeviceStatus
 from services.appium_service import find_free_port, start_appium, stop_appium
 from services.device_manager import DeviceManager
 from services.queue_manager import QueueManager
@@ -49,7 +49,7 @@ class TestExecutor:
             session_id = self.queue.dequeue()
             if session_id:
                 with self._app_context():
-                    db.session.expire_all()  # force fresh read each cycle
+                    db.session.remove()   # drop stale connection, get a fresh one
                     self._execute(session_id)
             else:
                 time.sleep(1)
@@ -61,7 +61,7 @@ class TestExecutor:
             logger.debug("SocketIO emit failed: %s", exc)
 
     def _execute(self, session_id: str) -> None:
-        db.session.expire_all() 
+        db.session.remove()  # ensure fresh DB state
         session: Optional[TestSession] = TestSession.query.filter_by(
             session_id=session_id
         ).first()
@@ -69,8 +69,8 @@ class TestExecutor:
             logger.warning("Session not found: %s", session_id)
             return
 
-        # Pick a device
-        device = self.device_manager.get_available_device()
+        # Pick a device — query fresh every time
+        device = Device.query.filter_by(status=DeviceStatus.ONLINE).first()
         if not device:
             logger.info("No device available for %s — re-queuing", session_id)
             self.queue.enqueue(session_id)
@@ -144,7 +144,7 @@ class TestExecutor:
 
             env = os.environ.copy()
             env.update({
-                "APPIUM_HOST": self.config.APPIUM_URL,  # full URL - handles ngrok & local
+                "APPIUM_HOST": self.config.APPIUM_URL,  # full URL — handles ngrok & local
                 "APPIUM_PORT": str(port),
                 "DEVICE_UDID": device.udid,
                 "PLATFORM_NAME": device.platform,
