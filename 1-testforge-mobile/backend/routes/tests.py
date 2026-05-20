@@ -97,3 +97,16 @@ def process_queue():
 
     threading.Thread(target=run, daemon=True).start()
     return jsonify({"message": f"Processing {session_id}"}), 202
+
+@tests_bp.get("/debug/device")
+def debug_device():
+    from models import Device, DeviceStatus
+    from extensions import db
+    db.session.remove()
+    device = Device.query.filter_by(status=DeviceStatus.ONLINE).first()
+    all_devices = Device.query.all()
+    return jsonify({
+        "found": device.to_dict() if device else None,
+        "all": [d.to_dict() for d in all_devices],
+        "count": len(all_devices)
+    })
